@@ -713,17 +713,17 @@ header.top #build{display:none}
 #kpis .tile .sub{display:block;font-size:12.5px;color:var(--ink-2);font-variant-numeric:tabular-nums}
 @media(max-width:1000px){#kpis .tile .value{font-size:24px}#kpis .tile{padding:14px 14px}}
 @media(max-width:700px){
-  #kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;background:transparent;border:0;border-radius:0;overflow:visible}
-  #kpis .tile{border-radius:16px;padding:12px 16px}
-  #kpis .tile .value{font-size:26px}
-  #kpis .tile:first-child{grid-column:1/-1}
+  #kpis{gap:1px;border-radius:14px;margin-bottom:6px}
+  #kpis .tile{border-radius:0;padding:7px 4px 8px 8px;gap:2px;display:flex;flex-direction:column;align-items:flex-start;min-width:0}
+  #kpis .tile .label{font-size:7.5px;letter-spacing:.08em}
+  #kpis .tile .value{font-size:14px;line-height:1.15}
+  #kpis .tile .sub{font-size:8.5px;white-space:nowrap}
 }
 .tile.t-traffic{background:var(--grp-traffic)} .tile.t-traffic .label{color:var(--gi-traffic)}
 .tile.t-leads{background:var(--grp-leads)}     .tile.t-leads .label{color:var(--gi-leads)}
 .tile.t-sales{background:var(--grp-sales)}     .tile.t-sales .label{color:var(--gi-sales)}
 .tile.t-intro{background:var(--grp-intro)}     .tile.t-intro .label{color:var(--gi-intro)}
 .tile.t-calls{background:var(--grp-calls)}     .tile.t-calls .label{color:var(--gi-calls)}
-@media(max-width:700px){#kpis .tile:first-child{grid-column:1/-1}}
 @media(max-width:640px){.tile{padding:14px 14px}.tile .value{font-size:26px}}
 .kpi-note{font-size:14px;color:var(--ink-2);padding:0 4px 18px}
 /* The weekly-summary card reuses the tile markup — keep it compact. */
@@ -1088,7 +1088,16 @@ button.lead:last-child{border-bottom:0}
 .gl-tile.t-sales{background:var(--grp-sales)}.gl-tile.t-sales .l{color:var(--gi-sales)}
 .gl-tile.t-intro{background:var(--grp-intro)}.gl-tile.t-intro .l{color:var(--gi-intro)}
 .gl-tile.t-calls{background:var(--grp-calls)}.gl-tile.t-calls .l{color:var(--gi-calls)}
-@media(max-width:700px){.gl-tile{padding:14px 16px}.gl-tile .v{font-size:26px}}
+@media(max-width:700px){
+  .gl-hero{grid-template-columns:repeat(5,minmax(0,1fr));gap:1px;background:var(--border);border:1px solid var(--border);
+    border-radius:14px;overflow:hidden;margin-bottom:10px}
+  .gl-hero .gl-tile:first-child{grid-column:auto}
+  .gl-tile{border-radius:0;padding:7px 4px 8px 8px;gap:2px;display:flex;flex-direction:column;align-items:flex-start;min-width:0}
+  .gl-tile .l{font-size:7.5px;letter-spacing:.08em}
+  .gl-tile .v{font-size:14px;line-height:1.15}
+  .gl-tile .d{font-size:8.5px;white-space:nowrap}
+  .gl-tile .dl{font-size:8.5px;letter-spacing:0}
+}
 .gl-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:18px 20px;
   box-shadow:0 1px 3px rgba(16,24,40,.05);margin-bottom:12px;min-width:0}
 .gl-card h2{font-size:14px;font-weight:600;margin:0 0 14px}
@@ -4490,14 +4499,25 @@ $("#spTo").addEventListener("change",   (e) => { state.spTo   = e.target.value; 
 
 function renderKpis(t, picked = 0, scoped = null) {
   const m = metrics(t);
+  const phone = matchMedia("(max-width:700px)").matches;
+  const km = (n) => state.currency + (n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, "") + "k" : Math.round(n));
+  const per = (n, v, unit) => (n ? km(v) + "/" + unit : "—");
+  const phoneTiles = [
+    { label: "Spend", value: km(t.cost), sub: m.roas > 0 ? m.roas.toFixed(2) + "x ROAS" : "no revenue", cls: "t-traffic" },
+    { label: "Leads", value: fmt(t.leads), kind: "leads", sub: per(t.leads, m.cpl, "lead"), cls: "t-leads" },
+    { label: "Intros", value: fmt(t.intro_calls), kind: "intro", sub: per(t.intro_calls, m.cpintro, "intro"), cls: "t-intro" },
+    { label: "Demos", value: fmt(t.booked_calls), kind: "calls", sub: per(t.booked_calls, m.cpcall, "demo"), cls: "t-calls" },
+    { label: "Sales", value: fmt(t.jobs), kind: "closes", sub: per(t.jobs, m.cpjob, "sale"), cls: "t-sales" },
+  ];
   const each = (n, v) => (n ? cur(v) + " each" : "—");
-  const tiles = [
+  const wideTiles = [
     { label: "Spend", value: cur(t.cost), sub: m.roas > 0 ? m.roas.toFixed(2) + "x return" : "No revenue yet", cls: "t-traffic" },
     { label: "Leads", value: fmt(t.leads), kind: "leads", sub: each(t.leads, m.cpl), cls: "t-leads" },
     { label: "Intro calls", value: fmt(t.intro_calls), kind: "intro", sub: each(t.intro_calls, m.cpintro), cls: "t-intro" },
     { label: "Demo calls", value: fmt(t.booked_calls), kind: "calls", sub: each(t.booked_calls, m.cpcall), cls: "t-calls" },
     { label: "Sales", value: fmt(t.jobs), kind: "closes", sub: each(t.jobs, m.cpjob), cls: "t-sales" },
   ];
+  const tiles = phone ? phoneTiles : wideTiles;
   $("#kpis").innerHTML = tiles.map((x) => {
     const open = x.kind && x.value !== "0" && x.value !== "—" && !picked && !scoped;
     return `
@@ -4583,16 +4603,17 @@ function renderGlance() {
   $("#glSub").textContent = when + (pw ? ", compared with the period before" : "");
   [...$("#glRange").children].forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.r === state.range)));
 
-  const each = (n, v) => (n ? cur(v) + " each" : "No " + "data yet");
+  const km = (n) => state.currency + (n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, "") + "k" : Math.round(n));
+  const per = (n, v, unit) => (n ? km(v) + "/" + unit : "—");
   const tiles = [
-    { l: "Spend", v: cur(t.cost), dl: glanceDeltaShort(t.cost, pt && pt.cost, "neutral"), d: m.roas > 0 ? m.roas.toFixed(2) + "x return" : "No revenue yet", c: "t-traffic" },
-    { l: "Leads", v: fmt(t.leads), dl: glanceDeltaShort(t.leads, pt && pt.leads, "up"), d: t.leads ? cur(m.cpl) + " each" : "—", c: "t-leads" },
-    { l: "Intro calls", v: fmt(t.intro_calls), dl: glanceDeltaShort(t.intro_calls, pt && pt.intro_calls, "up"), d: t.intro_calls ? cur(m.cpintro) + " each" : "—", c: "t-intro" },
-    { l: "Demo calls", v: fmt(t.booked_calls), dl: glanceDeltaShort(t.booked_calls, pt && pt.booked_calls, "up"), d: t.booked_calls ? cur(m.cpcall) + " each" : "—", c: "t-calls" },
-    { l: "Sales", v: fmt(t.jobs), dl: glanceDeltaShort(t.jobs, pt && pt.jobs, "up"), d: t.jobs ? cur(m.cpjob) + " each" : "—", c: "t-sales" },
+    { l: "Spend", v: km(t.cost), dl: glanceDeltaShort(t.cost, pt && pt.cost, "neutral"), d: m.roas > 0 ? m.roas.toFixed(2) + "x ROAS" : "no revenue", c: "t-traffic" },
+    { l: "Leads", v: fmt(t.leads), dl: glanceDeltaShort(t.leads, pt && pt.leads, "up"), d: per(t.leads, m.cpl, "lead"), c: "t-leads" },
+    { l: "Intros", v: fmt(t.intro_calls), dl: glanceDeltaShort(t.intro_calls, pt && pt.intro_calls, "up"), d: per(t.intro_calls, m.cpintro, "intro"), c: "t-intro" },
+    { l: "Demos", v: fmt(t.booked_calls), dl: glanceDeltaShort(t.booked_calls, pt && pt.booked_calls, "up"), d: per(t.booked_calls, m.cpcall, "demo"), c: "t-calls" },
+    { l: "Sales", v: fmt(t.jobs), dl: glanceDeltaShort(t.jobs, pt && pt.jobs, "up"), d: per(t.jobs, m.cpjob, "sale"), c: "t-sales" },
   ];
   $("#glHero").innerHTML = tiles.map((x) =>
-    `<div class="gl-tile ${x.c}"><span class="l"><span>${x.l}</span>${x.dl}</span><span class="v">${x.v}</span><span class="d">${x.d}</span></div>`).join("");
+    `<div class="gl-tile ${x.c}"><span class="l">${x.l}</span><span class="v">${x.v}</span><span class="d">${x.d}</span>${x.dl}</div>`).join("");
 
   const pi = (a, b) => (b > 0 ? Math.round((a / b) * 100) + "%" : "—");
   const steps = [
@@ -4882,6 +4903,7 @@ $("#mMoreView").addEventListener("click", (e) => {
   if (e.target.closest("#mDark")) { $("#btnTheme").click(); renderMMore(); }
 });
 
+matchMedia("(max-width:700px)").addEventListener("change", () => render());
 $("#kpiNote").addEventListener("click", (e) => {
   const lv = level();
   if (e.target.closest("#btnClearSel")) {
