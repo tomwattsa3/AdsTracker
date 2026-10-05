@@ -3,29 +3,41 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#ffffff">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Ads">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
 <title>SanterMedia — Ads Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
   color-scheme: light;
-  --plane:#f9fafb; --surface:#ffffff; --sunk:#f3f4f6; --sunk-2:#e5e7eb;
-  --ink:#111827; --ink-2:#6b7280; --muted:#9ca3af;
-  --grid:#e5e7eb; --axis:#d1d5db; --border:rgba(17,24,39,.08);
-  --stripe:#f9fafb; --hover:#eef2ff;
-  --cell:#e5e7eb; --th-ink:#6b7280;
-  --sub1:#eef2ff; --sub2:#e0e7ff; --gap:#f9fafb;
-  --pos-bg:#f0fdf4; --pos-ink:#15803d; --neg-bg:#fff1f2; --neg-ink:#be123c;
+  --plane:#f6f8fb; --surface:#ffffff; --sunk:#f4f6f9; --sunk-2:#eef0f3;
+  --ink:#111827; --ink-2:#4b5563; --muted:#6b7280;
+  --grid:#e5e7eb; --axis:#d1d5db; --border:#e5e7eb;
+  --stripe:#ffffff; --hover:#f3f8ff;
+  --cell:#eef0f3; --th-ink:#4b5563;
+  --sub1:#f8fafc; --sub2:#f4f6f9; --gap:#ffffff;
+  --pos-bg:#e3f5ec; --pos-ink:#166534; --neg-bg:#fdeceb; --neg-ink:#b42318;
   --s1:#2a78d6; --s2:#eb6834;
-  --accent:#4f46e5; --accent-2:#6366f1;
-  --f1:#c7d2fe; --f2:#818cf8; --f3:#4f46e5; --f4:#4338ca; --f5:#312e81;
-  --track:#e0e7ff;
+  --accent:#1d6fdc; --accent-2:#1659b8;
+  --f1:#cfe4ff; --f2:#8fc2ff; --f3:#2f8cff; --f4:#1d6fdc; --f5:#164e9c;
+  --track:#e5effc;
   --good:#16a34a; --bad:#dc2626; --warn:#d97706;
-  --shadow:0 1px 2px 0 rgba(0,0,0,.04), 0 1px 3px 0 rgba(0,0,0,.06);
-  --shadow-xs:0 1px 2px 0 rgba(0,0,0,.05);
-  --r:8px;
+  --shadow:0 1px 3px rgba(16,24,40,.06);
+  --shadow-xs:0 1px 2px rgba(16,24,40,.04);
+  --r:16px;
   --gold-bg:#fef3c7; --gold-ink:#92400e; --gold-ring:#fcd34d; --gold-wash:#fffbeb;
   --silver-bg:#f1f5f9; --silver-ink:#475569; --silver-ring:#cbd5e1;
   --bronze-bg:#fed7aa; --bronze-ink:#9a3412; --bronze-ring:#fdba74;
-  --grp-traffic:#eff6ff; --grp-leads:#f5f3ff; --grp-intro:#fdf2f8; --grp-calls:#fffbeb; --grp-sales:#ecfdf5;
+  --grp-traffic:#e3f5ec; --grp-leads:#eeeafc; --grp-intro:#fdeceb; --grp-calls:#e0f6f8; --grp-sales:#fff1d1;
+  --gb-traffic:#f7fcf9; --gb-leads:#f9f7ff; --gb-intro:#fff8f7; --gb-calls:#f4fcfc; --gb-sales:#fffcf2;
+  --gi-traffic:#166534; --gi-leads:#5b21b6; --gi-intro:#b42318; --gi-calls:#0e7490; --gi-sales:#92400e;
   /* Motion tokens — one easing curve, three durations, used everywhere
      instead of ad hoc per-component values so the whole app moves the
      same way. --ease is expo-out: fast start, gentle settle, the curve
@@ -42,93 +54,28 @@
    OS's prefers-color-scheme — the app always starts in light mode. */
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --plane:#111827; --surface:#1f2937; --sunk:#374151; --sunk-2:#4b5563;
-  --ink:#ffffff; --ink-2:#9ca3af; --muted:#6b7280;
-  --grid:#374151; --axis:#4b5563; --border:rgba(255,255,255,.08);
-  --stripe:#202836; --hover:#1e1b4b;
-  --cell:rgba(255,255,255,.08); --th-ink:#9ca3af;
-  --sub1:#1e1b4b; --sub2:#312e81; --gap:#111827;
-  --pos-bg:#052e16; --pos-ink:#4ade80; --neg-bg:#4c0519; --neg-ink:#fb7185;
+  --plane:#0f1318; --surface:#181d25; --sunk:#202733; --sunk-2:#2a3342;
+  --ink:#f3f4f6; --ink-2:#c3c9d4; --muted:#8e97a6;
+  --grid:#2a3342; --axis:#3b4658; --border:#2a3342;
+  --stripe:#181d25; --hover:#1c2a40;
+  --cell:#263040; --th-ink:#c3c9d4;
+  --sub1:#1d2430; --sub2:#222b39; --gap:#181d25;
+  --pos-bg:#0f3a24; --pos-ink:#7ee2a8; --neg-bg:#4a1a17; --neg-ink:#ffb4ab;
   --s1:#3987e5; --s2:#d95926;
-  --accent:#6366f1; --accent-2:#818cf8;
-  --f1:#3730a3; --f2:#4338ca; --f3:#6366f1; --f4:#818cf8; --f5:#a5b4fc;
-  --track:#1e1b4b;
+  --accent:#5aa2ff; --accent-2:#85bbff;
+  --f1:#1d3f6e; --f2:#2a5a9e; --f3:#4a8ee0; --f4:#7db3f5; --f5:#b3d4fb;
+  --track:#1d3050;
   --good:#4ade80; --bad:#f87171; --warn:#fbbf24;
   --shadow:0 1px 2px rgba(0,0,0,.4);
   --shadow-xs:none;
   --gold-bg:#451a03; --gold-ink:#fcd34d; --gold-ring:#92400e; --gold-wash:rgba(251,191,36,.07);
   --silver-bg:#334155; --silver-ink:#e2e8f0; --silver-ring:#475569;
   --bronze-bg:#431407; --bronze-ink:#fdba74; --bronze-ring:#9a3412;
-  --grp-traffic:rgba(59,130,246,.08); --grp-leads:rgba(167,139,250,.09);
-  --grp-intro:rgba(244,63,94,.08);
-  --grp-calls:rgba(251,191,36,.08); --grp-sales:rgba(52,211,153,.08);
+  --grp-traffic:#143626; --grp-leads:#2a2350; --grp-intro:#472220; --grp-calls:#0f3a42; --grp-sales:#47360f;
+  --gb-traffic:#16241e; --gb-leads:#1e1c33; --gb-intro:#2a1c1c; --gb-calls:#142c30; --gb-sales:#2a2415;
+  --gi-traffic:#7ee2a8; --gi-leads:#c4b5fd; --gi-intro:#ffb4ab; --gi-calls:#67d8ea; --gi-sales:#fcd34d;
 }
 
-/* ═══════════ Material 3 Expressive — dashboard-only design test ═══
-   Scoped entirely to #dashboardView by re-pointing the SAME tokens every
-   component already reads (--surface, --accent, --grp-*, --f1..f5, --r,
-   etc.) — so the KPI tiles, table bands, chips, segmented control and
-   revenue donut all pick up the new palette/shape automatically, with
-   zero changes to their own CSS. Leads/Survey/Sales/Analytics/Customers
-   pages, and the shared header/drawer/dialogs, read the untouched tokens
-   above and are unaffected. */
-#dashboardView{
-  --surface:#FAF8FE; --sunk:#F2EFFA; --sunk-2:#EAE5F5;
-  --ink:#1C1B20; --ink-2:#4A4854; --muted:#7A7785;
-  --grid:#EEE9F7; --axis:#D8D2E8; --border:rgba(28,27,32,.06);
-  --stripe:#EEEAF9; --hover:#E9E9EC;
-  --cell:#F0EBF9; --th-ink:#3D3B47;
-  --sub1:#E4DFFF; --sub2:#D6CFFA; --gap:#FCFAFE;
-  --pos-bg:#C2F4CD; --pos-ink:#146C2E; --neg-bg:#FFDAD6; --neg-ink:#BA1A1A;
-  --accent:#5B5BF0; --accent-2:#4A4AD9; --on-accent:#fff;
-  --field-bg:#fff;
-  --f1:#D9D6FF; --f2:#A6A2FF; --f3:#5B5BF0; --f4:#3E3ECC; --f5:#26268C;
-  --track:#DDD7F5;
-  --good:#146C2E; --bad:#BA1A1A; --warn:#8A5300;
-  --shadow:0 1px 3px rgba(28,27,42,.08); --shadow-xs:none;
-  --r:18px;
-  --grp-traffic:#E3E0F9; --grp-leads:#E4DFFF; --grp-intro:#FFDBCA; --grp-calls:#FFF0BF; --grp-sales:#C2F4CD;
-  --tertiary-container:#C2F4CD; --on-tertiary-container:#0F3D22;
-}
-:root[data-theme="dark"] #dashboardView{
-  --surface:#232128; --sunk:#2C2A32; --sunk-2:#37343D;
-  --ink:#E7E3ED; --ink-2:#C6C2D0; --muted:#928F9E;
-  --grid:#38353F; --axis:#4A4753; --border:rgba(255,255,255,.08);
-  --stripe:#1D1C22; --hover:#332F63;
-  --cell:#3A3742; --th-ink:#C8C5D0;
-  --sub1:#332F63; --sub2:#443E85; --gap:#232128;
-  --pos-bg:#0A5223; --pos-ink:#8CD99B; --neg-bg:#5C1A16; --neg-ink:#FFB4AB;
-  --accent:#C4C0FF; --accent-2:#ADA8FF; --on-accent:#26158A;
-  --f1:#3D2E9E; --f2:#5B5BF0; --f3:#8481FF; --f4:#A6A2FF; --f5:#D9D6FF;
-  --track:#3D2E9E;
-  --good:#8CD99B; --bad:#FFB4AB; --warn:#F4C062;
-  --shadow:0 1px 3px rgba(0,0,0,.4); --shadow-xs:none;
-  --grp-traffic:#38354E; --grp-leads:#3D2E9E; --grp-intro:#872600; --grp-calls:#4D3B0A; --grp-sales:#0A5223;
-  --tertiary-container:#0A5223; --on-tertiary-container:#A2F0AF;
-  --field-bg:#2E2B36;
-}
-/* Pill/tonal component shapes, scoped the same way. */
-#dashboardView button,#dashboardView select,#dashboardView input[type="search"]{border-radius:999px}
-#dashboardView input[type="date"]{border-radius:12px}
-#dashboardView .seg-indicator{background:var(--accent)}
-#dashboardView .seg button[aria-pressed="true"]{color:var(--on-accent)}
-#dashboardView .gchip{font-size:10.5px;padding:4px 9px}
-#dashboardView .gchip[aria-pressed="true"]{padding-left:8px}
-#dashboardView .gchip[aria-pressed="true"]::before{content:"✓";margin-right:4px;font-size:9px;font-weight:800}
-#dashboardView .f select,#dashboardView .f input{
-  background:var(--field-bg);
-  box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 12%,transparent);
-}
-/* The Revenue tile is always last in the KPI row — an expressive "hero"
-   treatment (second accent hue, asymmetric corners) for the headline
-   outcome metric, same idea as the design-test mockup. */
-#kpis .tile:last-child{
-  background:var(--tertiary-container);color:var(--on-tertiary-container);
-  border-radius:21px 9px 21px 9px;
-}
-#kpis .tile:last-child .label,#kpis .tile:last-child .sub{color:var(--on-tertiary-container);opacity:.82}
-@media(min-width:641px){ #dashboardView .tile .value{font-size:30px} }
-#dashboardView .card{overflow:hidden}
 
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
@@ -705,6 +652,453 @@ tbody tr.data:hover .row-by-ad{opacity:1}
 .dim{color:var(--muted)}
 .empty{padding:44px 16px;text-align:center;color:var(--muted)}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* ═══════════ Redesign — Ads Manager look ═══════════════════════════
+   Tokens live in :root above; everything below re-skins components that
+   already exist, so the data/render code is untouched. */
+body{font:400 14px/1.5 "Figtree",system-ui,-apple-system,"Segoe UI",sans-serif}
+button,select,input{border-radius:12px}
+
+/* ── Layout: full-bleed top bar, padded pages ─────────────── */
+.wrap{max-width:none;padding:0 0 80px}
+.wrap.pushed{margin-left:0}
+#adsView,#dashboardView,#leadsView,#analyticsView,#salesView,#surveyView,#customersView,#dailyView{
+  max-width:1680px;margin:0 auto;padding:24px 32px 0}
+@media(max-width:700px){
+  #adsView,#dashboardView,#leadsView,#analyticsView,#salesView,#surveyView,#customersView,#dailyView{padding:16px 14px 0}
+}
+
+/* ── Top bar + nav ───────────────────────────────────────── */
+header.top{position:sticky;top:0;z-index:30;margin:0;padding:0 32px;min-height:52px;
+  gap:4px 26px;background:var(--surface);border-bottom:1px solid var(--border)}
+@media(max-width:700px){header.top{padding:0 14px;gap:2px 16px}}
+.brand{display:flex;align-items:center;gap:9px;margin-right:0}
+.brand h1{font-size:15px;font-weight:700;margin:0;letter-spacing:0}
+.logo{width:26px;height:26px;border-radius:8px;background:var(--accent);color:#fff;
+  font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center}
+.topnav{display:flex;flex-wrap:wrap;align-items:center;gap:0 26px;margin-right:auto}
+.topnav .drawer-item{width:auto;opacity:1;transform:none;border-radius:0;background:transparent;
+  border:0;box-shadow:none;padding:15px 2px;font-size:14px;font-weight:500;color:var(--ink-2);
+  transition:color var(--dur-1) var(--ease)}
+.topnav .drawer-item:hover{background:transparent;color:var(--accent)}
+.topnav .drawer-item[aria-current="page"]{background:transparent;color:var(--accent-2);font-weight:700;
+  box-shadow:inset 0 -3px 0 var(--accent)}
+header.top .sub{font-size:12.5px;color:var(--muted)}
+header.top button.ghost{font-size:13.5px;font-weight:500;color:var(--ink-2);border-color:transparent;padding:6px 8px}
+header.top button.ghost:hover{background:var(--sunk);color:var(--ink)}
+#btnMenu{display:none}
+header.top #build{display:none}
+@media(max-width:1560px){header.top #acct{display:none}}
+
+/* ── Page heading + date pill ─────────────────────────────── */
+.page-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;margin-bottom:20px}
+.page-title{margin:0;font-size:28px;font-weight:700;letter-spacing:-.01em;line-height:1.2}
+.range-pill{display:inline-flex;align-items:center;gap:12px;min-height:48px;padding:0 18px;
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  box-shadow:var(--shadow-xs);font-size:15px;color:var(--ink);font-variant-numeric:tabular-nums}
+.range-pill svg{flex:none}
+
+/* ── Stat tiles ───────────────────────────────────────────── */
+.kpis{grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:8px}
+@media(max-width:1000px){.kpis{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:640px){.kpis{grid-template-columns:repeat(2,1fr);gap:10px}}
+.tile{border-radius:14px;border:0;box-shadow:none;padding:20px 24px;gap:10px}
+.tile .label{font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
+.tile .value{font-size:36px;font-weight:700;line-height:1;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+#kpis .tile .sub{display:none}
+.tile.t-traffic{background:var(--grp-traffic)} .tile.t-traffic .label{color:var(--gi-traffic)}
+.tile.t-leads{background:var(--grp-leads)}     .tile.t-leads .label{color:var(--gi-leads)}
+.tile.t-sales{background:var(--grp-sales)}     .tile.t-sales .label{color:var(--gi-sales)}
+@media(max-width:640px){.tile{padding:14px 14px}.tile .value{font-size:26px}}
+.kpi-note{font-size:14px;color:var(--ink-2);padding:0 4px 18px}
+/* The weekly-summary card reuses the tile markup — keep it compact. */
+.week-kpis .tile{padding:14px 16px;gap:6px;background:var(--sunk)}
+.week-kpis .tile .value{font-size:22px}
+
+/* ── Cards ────────────────────────────────────────────────── */
+.card{border-radius:18px;box-shadow:0 1px 3px rgba(16,24,40,.05)}
+.card-head h2{font-size:16px;font-weight:700}
+.card-head .note{font-size:13px}
+.card-drag-handle{opacity:.5}
+
+/* ── Level tabs (Campaigns / Ad Sets / Ads) ───────────────── */
+.tabcard{padding:16px;overflow:visible}
+.level-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:16px}
+@media(max-width:700px){.level-tabs{gap:8px}}
+.level-tabs button{display:flex;align-items:center;gap:12px;text-align:left;min-height:52px;
+  padding:0 18px;border-radius:12px;border:1px solid var(--border);background:var(--surface);
+  color:var(--ink-2);font-size:16px;font-weight:600;box-shadow:none}
+.level-tabs button:hover{background:var(--sunk)}
+.level-tabs button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+.level-tabs svg{flex:none;stroke:currentColor}
+.level-tabs .tl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tab-count{font-style:normal;min-width:26px;height:26px;border-radius:999px;padding:0 8px;
+  display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;
+  background:var(--sunk-2);color:var(--ink-2)}
+.level-tabs button[aria-pressed="true"] .tab-count{background:rgba(255,255,255,.3);color:#fff}
+@media(max-width:700px){.level-tabs button{padding:0 10px;font-size:14px;gap:6px}.level-tabs svg{display:none}}
+
+/* ── Toolbar ──────────────────────────────────────────────── */
+.tbar{padding:0 0 14px;align-items:flex-start;gap:12px}
+.tbar-ctl{margin-left:0;width:100%;align-items:center;gap:12px}
+.tbar-ctl .spacer{flex:1}
+.f label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.f select,.f input,.tbar-ctl>button{min-height:44px;font-size:14px;font-weight:500;border-radius:12px;
+  background:var(--surface);border:1px solid var(--border);box-shadow:none;padding:0 14px}
+.f.narrow select{max-width:210px}
+.f select{padding-right:6px}
+.f input[type="search"]{min-width:200px}
+.tbar-ctl>button{display:inline-flex;align-items:center;gap:8px}
+.tbar-ctl>button.primary{background:var(--surface);color:var(--ink);border:1px solid var(--border);font-weight:500}
+.tbar-ctl>button.primary:hover{background:var(--sunk)}
+.groups-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:0 0 14px}
+.groups-row .gl{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.groups{padding:0}
+.gchip{font-size:12px;font-weight:600;padding:5px 12px;border-radius:999px;border:1px solid transparent}
+.gchip[data-g="traffic"]{color:var(--gi-traffic)} .gchip[data-g="leads"]{color:var(--gi-leads)}
+.gchip[data-g="intro"]{color:var(--gi-intro)} .gchip[data-g="calls"]{color:var(--gi-calls)}
+.gchip[data-g="sales"]{color:var(--gi-sales)}
+.gchip[aria-pressed="true"]{box-shadow:none}
+.gchip[aria-pressed="true"]::before{content:"✓";margin-right:5px;font-size:10px;font-weight:800}
+.gchip[aria-pressed="false"]{opacity:.5;background:var(--sunk)}
+.seg{border-radius:12px;padding:3px;background:var(--sunk-2);border:0}
+.seg-indicator{background:var(--surface);border-radius:9px}
+.seg button{border-radius:9px;font-size:13.5px;padding:6px 12px}
+.seg button[aria-pressed="true"]{color:var(--ink);font-weight:700}
+
+/* ── Tables ───────────────────────────────────────────────── */
+.tscroll{padding:0;border:1px solid var(--border);border-radius:14px;background:var(--surface)}
+.card>.tscroll{margin:0 16px 16px}
+.tabcard>.tscroll{margin:0}
+table{font-size:14px}
+th,td{padding:0 10px;border-right:1px solid rgba(15,23,42,.04);border-bottom:1px solid var(--cell)}
+tbody tr.data td{height:50px}
+tbody tr.data{background:var(--surface)}
+tbody tr.data:nth-child(even){background:var(--surface)}
+tbody tr.data:hover{background:var(--hover)}
+tbody tr.data.d1{background:var(--sub1)} tbody tr.data.d2{background:var(--sub2)}
+tbody tr.data.d1:hover,tbody tr.data.d2:hover{background:var(--hover)}
+tbody tr.data.sel{background:#e8f2ff}
+/* No separate band row on the main table — its column heads carry the tint. */
+#tbl thead tr.bands{display:none}
+#tbl thead tr.cols th{top:0}
+td.gap,th.gap{display:none !important}
+thead tr.cols th,thead tr.bands th{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--th-ink);background:var(--sunk);padding:0 10px;height:46px;line-height:1.35}
+/* Only the main table wraps its heads (two-line "COST / LEAD"); the other
+   tables size their columns from unwrapped header text (see autoFitTable). */
+#tbl thead tr.cols th{white-space:normal;min-width:96px}
+#tbl thead tr.cols th.stick{min-width:0}
+thead tr.bands th{height:36px}
+th.bstart,td.bstart,th.bend,td.bend{border-left:0;border-right:1px solid rgba(15,23,42,.04)}
+/* Funnel-stage tints: header strong, body faint. */
+thead tr.cols th.g-traffic,thead tr.bands th[data-g="traffic"]{background:var(--grp-traffic);color:var(--gi-traffic)}
+thead tr.cols th.g-leads,thead tr.bands th[data-g="leads"]{background:var(--grp-leads);color:var(--gi-leads)}
+thead tr.cols th.g-intro,thead tr.bands th[data-g="intro"]{background:var(--grp-intro);color:var(--gi-intro)}
+thead tr.cols th.g-calls,thead tr.bands th[data-g="calls"]{background:var(--grp-calls);color:var(--gi-calls)}
+thead tr.cols th.g-sales,thead tr.bands th[data-g="sales"]{background:var(--grp-sales);color:var(--gi-sales)}
+tbody td.g-traffic,tfoot td.g-traffic{background:var(--gb-traffic)}
+tbody td.g-leads,tfoot td.g-leads{background:var(--gb-leads)}
+tbody td.g-intro,tfoot td.g-intro{background:var(--gb-intro)}
+tbody td.g-calls,tfoot td.g-calls{background:var(--gb-calls)}
+tbody td.g-sales,tfoot td.g-sales{background:var(--gb-sales)}
+tbody tr.data.d1 td[class*="g-"]{background-image:linear-gradient(rgba(15,23,42,.03),rgba(15,23,42,.03))}
+tbody tr.data.d2 td[class*="g-"]{background-image:linear-gradient(rgba(15,23,42,.055),rgba(15,23,42,.055))}
+tbody tr.data.sel td[class*="g-"]{background-image:linear-gradient(rgba(47,140,255,.1),rgba(47,140,255,.1))}
+td.cell-pos{background:var(--pos-bg) !important;color:var(--pos-ink)}
+td.cell-neg{background:var(--neg-bg) !important;color:var(--neg-ink)}
+tbody tr.data td{font-variant-numeric:tabular-nums}
+/* Currency: symbol hard left, number hard right inside the cell. */
+.cur{display:flex;justify-content:space-between;gap:10px;min-width:64px}
+.cur i{font-style:normal}
+/* Frozen name + spend columns, with a dashed rule after spend. */
+#tbl th.stick,#tbl td.stick{width:var(--name-col-w,260px);min-width:var(--name-col-w,260px);max-width:var(--name-col-w,260px)}
+th.stick,td.stick{border-right:1px solid var(--cell)}
+thead tr.cols th.stick{background:var(--sunk);text-align:left;color:var(--th-ink)}
+thead tr.bands th.stick{background:var(--sunk)}
+tbody tr.data td.stick{background:var(--surface)}
+tbody tr.data:nth-child(even) td.stick{background:var(--surface)}
+tbody tr.data.d1 td.stick{background:var(--sub1);box-shadow:none}
+tbody tr.data.d2 td.stick{background:var(--sub2);box-shadow:none}
+tbody tr.data.sel td.stick{background:#e8f2ff}
+tbody tr.data:hover td.stick{background:var(--hover)}
+#tbl th.stick2,#tbl td.stick2{position:sticky;left:var(--name-col-w,260px);z-index:2;border-right:2px dashed #5eead4}
+#tbl thead th.stick2{z-index:4}
+tbody tr.data td.stick2{background:var(--surface)}
+tbody tr.data.d1 td.stick2{background:var(--sub1)}
+tbody tr.data.d2 td.stick2{background:var(--sub2)}
+tbody tr.data.sel td.stick2{background:#e8f2ff}
+tbody tr.data:hover td.stick2{background:var(--hover)}
+tfoot tr.totals td.stick2{background:var(--sunk)}
+/* Totals */
+tfoot tr.totals{background:var(--sunk)}
+tfoot tr.totals td{height:50px;padding-bottom:0;border-top:2px dashed var(--axis);font-weight:700}
+tfoot tr.totals td.stick{background:var(--sunk);border-radius:0}
+tfoot tr.totals td:last-child{border-radius:0}
+/* Name cell */
+.nm{gap:10px}
+.nm .txt-el{white-space:normal;line-height:1.3;font-size:14px;font-weight:600}
+tbody tr.data.d1 .nm .txt-el,tbody tr.data.d2 .nm .txt-el{font-weight:500}
+tbody tr.data.d1 td.txt{color:var(--ink)} tbody tr.data.d2 td.txt{color:var(--ink-2)}
+.row-sel{width:18px;height:18px;flex:none;margin:0;padding:0;accent-color:var(--accent);cursor:pointer}
+.chev{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;flex:none;
+  border:1px solid #d1d5db;border-radius:7px;background:var(--surface);font-size:0}
+.chev::before{content:"";width:6px;height:6px;border-right:2px solid var(--ink-2);border-top:2px solid var(--ink-2);
+  transform:rotate(45deg);margin-left:-2px}
+.chev.open{font-size:0}
+.chev-none{width:0}
+.row-by-ad{opacity:.55}
+tbody tr.data:hover .row-by-ad{opacity:1}
+
+/* ── Other pages: same look, lighter touch ────────────────── */
+.card-head,.tbar h2{font-size:16px}
+.tbar h2{font-weight:700}
+.stage .scount{font-size:26px;font-weight:700}
+.stage .sname{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+.funnel.conv .stage .scount{font-size:30px}
+dialog{border-radius:18px}
+.empty{color:var(--muted)}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover{background:var(--accent-2)}
+
+.cur b{font-weight:inherit}
+@media(max-width:700px){
+  header.top{position:static;row-gap:0}
+  .brand{margin-right:auto;padding:10px 0}
+  .topnav{order:5;flex:0 0 100%;flex-wrap:nowrap;overflow-x:auto;gap:0 20px;margin-right:0;scrollbar-width:none}
+  .topnav::-webkit-scrollbar{display:none}
+  .topnav .drawer-item{white-space:nowrap;flex:none}
+  #kpis .tile{order:0 !important}
+}
+
+/* ── Type scale: smaller and lighter ───────────────────────── */
+body{font-size:13px}
+.brand h1{font-size:14px;font-weight:600}
+.topnav .drawer-item{font-size:13px;font-weight:400}
+.topnav .drawer-item[aria-current="page"]{font-weight:600}
+header.top .sub,header.top button.ghost{font-size:12.5px;font-weight:400}
+.page-title{font-size:22px;font-weight:600}
+.range-pill{font-size:13px;min-height:40px;padding:0 14px}
+.tile{padding:16px 20px;gap:8px}
+.tile .label{font-size:10.5px;font-weight:600;letter-spacing:.14em}
+.tile .value{font-size:28px;font-weight:600}
+.week-kpis .tile .value{font-size:19px}
+.kpi-note{font-size:12.5px}
+.card-head h2,.tbar h2{font-size:14px;font-weight:600}
+.card-head .note{font-size:12px}
+.level-tabs button{font-size:14px;font-weight:500;min-height:44px}
+.level-tabs button[aria-pressed="true"]{font-weight:600}
+.tab-count{font-size:12px;font-weight:600;min-width:24px;height:24px}
+.f select,.f input,.tbar-ctl>button{min-height:38px;font-size:13px;font-weight:400}
+.tbar-ctl>button.primary{font-weight:400}
+.groups-row .gl{font-size:10px;font-weight:600}
+.gchip{font-size:11.5px;font-weight:500}
+.seg button{font-size:12.5px}
+.seg button[aria-pressed="true"]{font-weight:600}
+table{font-size:13px}
+tbody tr.data td{height:44px}
+thead tr.cols th,thead tr.bands th{font-size:9.5px;font-weight:600;letter-spacing:.1em;height:40px}
+.nm .txt-el{font-size:13px;font-weight:500}
+tbody tr.data.d1 .nm .txt-el,tbody tr.data.d2 .nm .txt-el{font-weight:400}
+tfoot tr.totals td{font-weight:600;height:44px}
+.chev{width:24px;height:24px}
+.row-sel{width:16px;height:16px}
+td.cell-pos,td.cell-neg{font-weight:500}
+.stage .scount{font-size:22px;font-weight:600}
+.funnel.conv .stage .scount{font-size:24px}
+.stage .sname{font-size:10px;font-weight:600}
+.lb-stat b{font-weight:600}
+.pos,.neg{font-weight:500}
+
+/* ── Phone app ─────────────────────────────────────────────── */
+@media(min-width:701px){ #mCampView,#mLeadsView,#mMoreView,.mnav,#leadSheet,#sheetScrim{display:none !important} }
+@media(max-width:700px){
+  header.top{display:none}
+  #adsView,#dashboardView,#leadsView,#analyticsView,#salesView,#surveyView,#customersView,#dailyView,#glanceView,
+  #mCampView,#mLeadsView,#mMoreView{padding-top:calc(18px + env(safe-area-inset-top))}
+  .wrap{padding-bottom:calc(100px + env(safe-area-inset-bottom))}
+}
+#mCampView,#mLeadsView,#mMoreView{max-width:640px;margin:0 auto;padding:24px 16px 0}
+.mnav{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--surface);border-top:1px solid var(--border);
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding:6px 8px calc(8px + env(safe-area-inset-bottom))}
+.mnav button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:0;background:transparent;
+  box-shadow:none;border-radius:12px;color:var(--muted);font-size:11px;font-weight:500;min-height:52px;padding:4px 0}
+.mnav button[aria-current="true"]{color:var(--accent);font-weight:600}
+.m-head{display:flex;flex-direction:column;gap:2px;margin-bottom:14px}
+.m-eyebrow{font-size:12px;color:var(--muted)}
+.m-eyebrow.up{font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase}
+.m-tiles{display:grid;grid-template-columns:repeat(var(--n,3),minmax(0,1fr));gap:8px;margin-bottom:14px}
+.m-tile{border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.m-tile span{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase}
+.m-tile b{font-size:18px;font-weight:600;font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis}
+.m-tile.t-traffic{background:var(--grp-traffic)}.m-tile.t-traffic span{color:var(--gi-traffic)}
+.m-tile.t-leads{background:var(--grp-leads)}.m-tile.t-leads span{color:var(--gi-leads)}
+.m-tile.t-intro{background:var(--grp-intro)}.m-tile.t-intro span{color:var(--gi-intro)}
+.m-sort{font-size:12.5px;color:var(--muted);margin:0 4px 8px}
+.m-card{display:flex;flex-direction:column;gap:12px;width:100%;text-align:left;background:var(--surface);
+  border:1px solid var(--border);border-radius:20px;padding:16px;margin-bottom:10px;box-shadow:none;font:inherit;color:inherit}
+.m-card-top{display:flex;align-items:center;gap:8px}
+.m-card-top b{flex:1;min-width:0;font-size:15px;font-weight:600;line-height:1.3}
+.m-card-top svg{color:var(--muted);flex:none}
+.m-badge{font-size:11px;font-weight:600;border-radius:999px;padding:3px 9px;background:var(--pos-bg);color:var(--pos-ink)}
+.m-bar{height:6px;border-radius:999px;background:var(--sunk-2)}
+.m-bar i{display:block;height:100%;border-radius:999px;background:#34b27b}
+.m-bar.thin{height:5px}
+.m-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;font-variant-numeric:tabular-nums}
+.m-stats.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+.m-stats div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.m-stats span{font-size:11px;color:var(--muted)}
+.m-stats b{font-size:15px;font-weight:600}
+.m-stats.four b{font-size:14px}
+.m-back{display:flex;align-items:center;gap:4px;border:0;background:transparent;box-shadow:none;padding:0;min-height:44px;
+  color:var(--accent);font-size:14px;font-weight:600}
+.m-set{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:14px 16px;margin-bottom:12px;
+  display:flex;flex-direction:column;gap:10px}
+.m-set-n{font-size:15px;font-weight:600;line-height:1.3}
+.m-ads-h{font-size:12.5px;font-weight:600;margin-top:2px}
+.m-ad{padding:10px 0;border-top:1px solid var(--cell);display:flex;flex-direction:column;gap:8px}
+.m-ad-n{font-size:13px;font-weight:500;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.m-ad-s{display:flex;gap:14px;font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.m-ad-s b{font-weight:600;color:var(--ink)}
+.m-more{font-size:12.5px;color:var(--muted)}
+.m-search{display:flex;align-items:center;gap:10px;min-height:44px;padding:0 14px;border:1px solid var(--border);
+  border-radius:14px;background:var(--surface);color:var(--muted);margin-bottom:12px}
+.m-search input{flex:1;min-width:0;border:0;outline:0;background:transparent;box-shadow:none;padding:0;font-size:14px;color:var(--ink)}
+.m-chips{display:flex;gap:8px;overflow-x:auto;margin-bottom:14px;scrollbar-width:none;padding-bottom:2px}
+.m-chips::-webkit-scrollbar{display:none}
+.m-chips button{flex:none;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--border);background:var(--surface);
+  color:var(--ink-2);font-size:13px;font-weight:500;box-shadow:none;display:flex;align-items:center;gap:6px}
+.m-chips button i{font-style:normal;font-size:12px;opacity:.8}
+.m-chips button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.m-glabel{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:2px 4px 4px;margin-top:6px}
+.m-group{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:0 16px;margin-bottom:8px}
+.m-lead{display:flex;align-items:center;gap:12px;width:100%;min-height:60px;border:0;border-bottom:1px solid var(--cell);
+  background:transparent;border-radius:0;box-shadow:none;padding:0;text-align:left;font:inherit;color:inherit}
+.m-lead:last-child{border-bottom:0}
+.av{flex:none;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600}
+.m-lead-t{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.3}
+.m-lead-t b{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.m-lead-t small{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.m-showmore{width:100%;min-height:48px;border-radius:14px;border:1px solid var(--border);background:var(--surface);
+  color:var(--accent);font-weight:600;font-size:14px;margin:8px 0}
+.m-list{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:0 16px;margin-bottom:14px}
+.m-row{display:flex;align-items:center;gap:14px;width:100%;min-height:62px;border:0;border-bottom:1px solid var(--cell);
+  background:transparent;border-radius:0;box-shadow:none;padding:0;text-align:left;font:inherit;color:inherit}
+.m-row:last-child{border-bottom:0}
+.m-ico{flex:none;width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center}
+.m-row-t{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.3}
+.m-row-t b{font-size:15px;font-weight:600}
+.m-row-t small{font-size:12px;color:var(--muted)}
+.m-chev{color:var(--muted);flex:none}
+.m-switch{width:48px;height:28px;border-radius:999px;background:var(--axis);padding:3px;display:flex;align-items:center;flex:none;
+  transition:background var(--dur-2) var(--ease)}
+.m-switch i{width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);
+  transition:transform var(--dur-2) var(--ease)}
+#mDark[aria-checked="true"] .m-switch{background:var(--accent)}
+#mDark[aria-checked="true"] .m-switch i{transform:translateX(20px)}
+/* Lead details sheet */
+.sheet-scrim{position:fixed;inset:0;background:rgba(17,24,39,.45);opacity:0;pointer-events:none;
+  transition:opacity .26s ease;z-index:60}
+.sheet-scrim.on{opacity:1;pointer-events:auto}
+.lead-sheet{position:fixed;left:0;right:0;bottom:0;z-index:70;max-width:640px;margin:0 auto;max-height:88vh;overflow:auto;
+  background:var(--surface);border-radius:28px 28px 0 0;box-shadow:0 -12px 40px rgba(16,24,40,.2);
+  padding:10px 20px calc(26px + env(safe-area-inset-bottom));transform:translateY(105%);
+  transition:transform .32s cubic-bezier(.16,1,.3,1);overscroll-behavior:contain}
+.lead-sheet.on{transform:translateY(0)}
+.lead-sheet.dragging{transition:none}
+.sheet-grab{width:40px;height:5px;border-radius:999px;background:var(--axis);margin:0 auto 14px;padding:10px 40px;background-clip:content-box;box-sizing:content-box}
+.sh-head{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.av.lg{width:52px;height:52px;font-size:17px}
+.sh-who{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;align-items:flex-start}
+.sh-who b{font-size:20px;font-weight:600;line-height:1.2}
+.chip{font-size:11px;font-weight:600;border-radius:999px;padding:3px 10px}
+.sh-close{flex:none;width:44px;height:44px;border-radius:50%;border:0;background:var(--sunk-2);color:var(--ink-2);
+  display:flex;align-items:center;justify-content:center;padding:0;box-shadow:none}
+.sh-card{background:var(--sunk);border-radius:18px;padding:2px 16px;margin-bottom:16px}
+.sh-row{display:flex;justify-content:space-between;gap:16px;align-items:center;min-height:44px;border-bottom:1px solid var(--grid);font-size:13px}
+.sh-row:last-child{border-bottom:0}
+.sh-row span{color:var(--muted);flex:none}
+.sh-row b{font-weight:500;text-align:right;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sh-h{font-size:14px;font-weight:600;margin:0 0 10px}
+.sh-step{display:flex;gap:14px}
+.sh-dot{display:flex;flex-direction:column;align-items:center}
+.sh-dot i{width:14px;height:14px;border-radius:50%;border:2px solid var(--axis);background:var(--surface);box-sizing:border-box;flex:none}
+.sh-dot u{width:2px;flex:1;min-height:18px;background:var(--grid)}
+.sh-step:last-child .sh-dot u{background:transparent}
+.sh-step.done .sh-dot i{background:var(--accent);border-color:#bfdbfe}
+.sh-step.done .sh-dot u{background:#bfdbfe}
+.sh-st{display:flex;flex-direction:column;gap:1px;padding-bottom:10px;margin-top:-3px}
+.sh-st b{font-size:14px;font-weight:600;color:var(--muted)}
+.sh-step.done .sh-st b{color:var(--ink)}
+.sh-st small{font-size:12px;color:var(--muted)}
+/* glance rows are buttons now */
+button.lead{width:100%;background:transparent;border-width:0 0 1px;border-radius:0;box-shadow:none;padding:10px 0;text-align:left;font:inherit;color:inherit}
+button.lead:last-child{border-bottom:0}
+
+/* ── At a glance ───────────────────────────────────────────── */
+/* Phone-only: desktop has the Ads Manager. */
+@media(min-width:701px){ .topnav [data-page="glance"]{display:none} #glanceView{display:none !important} }
+.wrap{padding-bottom:calc(80px + env(safe-area-inset-bottom))}
+.lead{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--cell)}
+.lead:last-child{border-bottom:0}
+.lead .av{flex:none;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:600}
+.lead-main{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.3}
+.lead-main b{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lead-main small,.lead-side small{font-size:12px;color:var(--muted)}
+.lead-main small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lead-side{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.lead .chip{font-size:11px;font-weight:600;border-radius:999px;padding:3px 9px}
+#glanceView{max-width:1100px;margin:0 auto;padding:24px 32px 0}
+@media(max-width:700px){#glanceView{padding:16px 14px 0}}
+.gl-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+.gl-sub{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
+.gl-range{display:inline-flex;gap:3px;background:var(--sunk-2);border-radius:12px;padding:3px}
+.gl-range button{border:0;background:transparent;box-shadow:none;border-radius:9px;padding:0 14px;font-size:13px;
+  color:var(--ink-2);min-height:36px}
+.gl-range button[aria-pressed="true"]{background:var(--surface);color:var(--ink);font-weight:600;box-shadow:var(--shadow-xs)}
+.gl-hero{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:12px}
+@media(max-width:900px){.gl-hero{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.gl-tile{border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.gl-tile .l{font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase}
+.gl-tile .v{font-size:32px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
+.gl-tile .d{font-size:12px;color:var(--ink-2)}
+.gl-tile .d.good{color:var(--good);font-weight:500}.gl-tile .d.bad{color:var(--bad);font-weight:500}
+.gl-tile.t-traffic{background:var(--grp-traffic)}.gl-tile.t-traffic .l{color:var(--gi-traffic)}
+.gl-tile.t-leads{background:var(--grp-leads)}.gl-tile.t-leads .l{color:var(--gi-leads)}
+.gl-tile.t-sales{background:var(--grp-sales)}.gl-tile.t-sales .l{color:var(--gi-sales)}
+@media(max-width:700px){.gl-tile{padding:14px 16px}.gl-tile .v{font-size:26px}}
+.gl-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:18px 20px;
+  box-shadow:0 1px 3px rgba(16,24,40,.05);margin-bottom:12px;min-width:0}
+.gl-card h2{font-size:14px;font-weight:600;margin:0 0 14px}
+.gl-card-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px}
+.gl-card-head h2{margin:0}
+.gl-note{font-size:12px;font-weight:400;color:var(--muted);margin-left:8px}
+.gl-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}
+@media(max-width:900px){.gl-grid{grid-template-columns:minmax(0,1fr)}}
+.fn{display:grid;grid-template-columns:84px minmax(0,1fr) 112px;gap:12px;align-items:center;padding:7px 0}
+.fn-l{font-size:13px;color:var(--ink-2)}
+.fn-track{height:18px;border-radius:6px;background:var(--sunk)}
+.fn-track i{display:block;height:100%;border-radius:6px}
+.fn-v{display:flex;flex-direction:column;align-items:flex-end;line-height:1.25}
+.fn-v b{font-size:16px;font-weight:600;font-variant-numeric:tabular-nums}
+.fn-v small{font-size:11px;color:var(--muted)}
+@media(max-width:700px){.fn{grid-template-columns:68px minmax(0,1fr) 104px;gap:8px}}
+.gl-bars{display:flex;align-items:flex-end;gap:8px;height:150px}
+.gl-bar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;height:100%;min-width:0}
+.gl-bar i{display:block;width:100%;min-height:2px;border-radius:5px 5px 0 0;background:#b9a6f5}
+.gl-bar.today i{background:#8b6cf0}
+.gl-bar .n{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;min-height:14px}
+.gl-bar .dl{font-size:11px;color:var(--muted)}
+.cp{padding:11px 0;border-bottom:1px solid var(--cell)}
+.cp:last-child{border-bottom:0}
+.cp-top{display:flex;justify-content:space-between;gap:10px;font-size:13px}
+.cp-top b{font-weight:600;font-variant-numeric:tabular-nums}
+.cp-name{font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cp-bar{height:6px;border-radius:999px;background:var(--sunk-2);margin:8px 0 6px}
+.cp-bar i{display:block;height:100%;border-radius:999px;background:#34b27b}
+.cp-stats{display:flex;gap:14px;font-size:12px;color:var(--ink-2)}
+.linklike{border:0;background:transparent;box-shadow:none;padding:0 2px;color:var(--accent);font-weight:600;text-decoration:underline;font-size:inherit}
 </style>
 <script>
 // Runs before paint so a previously-chosen dark mode doesn't flash light
@@ -719,45 +1113,111 @@ if (localStorage.getItem("santermedia.theme") === "dark") {
 <div class="wrap">
 
   <header class="top">
-    <button id="btnMenu" class="ghost icon-btn" aria-label="Menu" aria-expanded="false">
+    <button id="btnMenu" class="ghost icon-btn" aria-label="Menu" aria-expanded="false" hidden>
       <span class="burger"><span></span><span></span><span></span></span>
     </button>
     <div class="brand">
-      <h1>SanterMedia — Ads Tracker</h1>
-      <span class="sub" id="acct">Meta · full funnel</span>
+      <span class="logo" aria-hidden="true">S</span>
+      <h1>SanterMedia</h1>
     </div>
+    <nav class="topnav" aria-label="Main">
+      <button class="drawer-item" data-page="glance" aria-current="page">At a glance</button>
+      <button class="drawer-item" data-page="dashboard">Dashboard</button>
+      <button class="drawer-item" data-page="ads">Ads Manager</button>
+      <button class="drawer-item" data-page="daily">Daily breakdown</button>
+      <button class="drawer-item" data-page="leads">Leads</button>
+      <button class="drawer-item" data-page="survey">Survey answers</button>
+      <button class="drawer-item" data-page="customers">Customers</button>
+      <button class="drawer-item" data-page="sales">Sales performance</button>
+      <button class="drawer-item" data-page="analytics">Analytics</button>
+    </nav>
+    <span class="sub" id="acct">Meta · full funnel</span>
     <span class="sub" id="build" title="Timestamp of the page file your browser is running. If this is older than the last change, you are on a cached copy — hard refresh."></span>
     <button id="btnTheme" class="ghost" title="Light / dark">◐</button>
     <button id="btnSource" class="ghost">Data source</button>
-    <button id="btnExport" class="ghost">Export CSV</button>
-    <button id="btnReload" class="primary">Refresh</button>
   </header>
 
-  <div id="dashboardView">
-  <!-- ── KPI row ──────────────────────────────────────────── -->
+<div id="mCampView" hidden></div>
+
+<div id="mLeadsView" hidden>
+  <div class="m-head"><span class="m-eyebrow" id="mLeadEyebrow">All time</span><h1 class="page-title">Leads</h1></div>
+  <label class="m-search">
+    <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 14 14"/></svg>
+    <input id="mLeadSearch" type="search" placeholder="Search name or email" aria-label="Search leads" autocomplete="off">
+  </label>
+  <div class="m-chips" id="mLeadChips"></div>
+  <div id="mLeadList"></div>
+</div>
+
+<div id="mMoreView" hidden>
+  <div class="m-head"><span class="m-eyebrow">SanterMedia</span><h1 class="page-title">More</h1></div>
+  <div class="m-list" id="mMoreList"></div>
+  <div class="m-list">
+    <button type="button" class="m-row" id="mResync">
+      <span class="m-ico" style="background:var(--sunk-2);color:var(--ink-2)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.3-4.6L4 8.5M4 4v4.5h4.5M4 13a8 8 0 0 0 14.3 4.6l1.7-2.1M20 20v-4.5h-4.5"/></svg></span>
+      <span class="m-row-t"><b>Re-sync data</b><small id="mSyncNote">Pull the latest from the Google Sheet</small></span>
+    </button>
+    <button type="button" class="m-row" id="mDark" role="switch" aria-checked="false">
+      <span class="m-ico" style="background:var(--sunk-2);color:var(--ink-2)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/></svg></span>
+      <span class="m-row-t"><b>Dark mode</b></span>
+      <span class="m-switch"><i></i></span>
+    </button>
+  </div>
+</div>
+
+<div id="glanceView">
+  <div class="gl-head">
+    <div>
+      <h1 class="page-title">At a glance</h1>
+      <span class="gl-sub" id="glSub"></span>
+    </div>
+    <div class="gl-range" id="glRange" role="group" aria-label="Date range">
+      <button data-r="today" aria-pressed="false">Today</button>
+      <button data-r="7" aria-pressed="false">7 days</button>
+      <button data-r="30" aria-pressed="false">30 days</button>
+      <button data-r="all" aria-pressed="true">All time</button>
+    </div>
+  </div>
+  <section class="gl-hero" id="glHero"></section>
+  <section class="gl-card">
+    <div class="gl-card-head"><h2>Most recent leads</h2><button type="button" class="linklike" data-go="mleads">See all</button></div>
+    <div id="glLeads"></div>
+  </section>
+  <section class="gl-card">
+    <h2>Funnel</h2>
+    <div id="glFunnel"></div>
+  </section>
+  <div class="gl-grid">
+    <section class="gl-card">
+      <h2>Leads per day <span class="gl-note" id="glBarsNote"></span></h2>
+      <div id="glBars"></div>
+    </section>
+    <section class="gl-card">
+      <div class="gl-card-head"><h2>Top campaigns</h2><button type="button" class="linklike" data-go="mcamp">See all</button></div>
+      <div id="glCamps"></div>
+    </section>
+  </div>
+</div>
+
+  <div id="adsView" hidden>
+  <div class="page-head">
+    <h1 class="page-title">Ads Manager</h1>
+    <div class="range-pill" data-range-pill><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span></span></div>
+  </div>
+
+  <!-- ── Stat tiles ───────────────────────────────────────── -->
   <section class="kpis" id="kpis"></section>
+  <div class="kpi-note" id="kpiNote"></div>
 
   <!-- ── Drill-down table ─────────────────────────────────── -->
-  <section class="card" style="margin-bottom:14px">
+  <section class="card tabcard" style="margin-bottom:14px">
+    <div class="level-tabs" id="levelSeg" role="group" aria-label="Level">
+      <button data-view="campaign" aria-pressed="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.5h7a2 2 0 0 1 2 2v7.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2Z"/></svg><span class="tl">Campaigns</span><i class="tab-count" id="cntCampaign">–</i></button>
+      <button data-view="adset"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h7v7H4ZM13 4h7v7h-7ZM4 13h7v7H4ZM13 13h7v7h-7Z"/></svg><span class="tl">Ad Sets</span><i class="tab-count" id="cntAdset">–</i></button>
+      <button data-view="ad"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v4l11 4V6ZM15 9.5a3 3 0 0 1 0 5M7 14.5V19"/></svg><span class="tl">Ads</span><i class="tab-count" id="cntAd">–</i></button>
+    </div>
     <div class="tbar">
-      <div class="groups" id="groups"></div>
       <div class="tbar-ctl">
-        <div class="f narrow">
-          <label for="fCampaignSearch">Search campaigns</label>
-          <input id="fCampaignSearch" type="search" placeholder="e.g. YSP, cold, retarget…">
-        </div>
-        <div class="f narrow">
-          <label for="fCampaign">Campaign</label>
-          <select id="fCampaign"><option value="ALL">All campaigns</option></select>
-        </div>
-        <div class="f narrow">
-          <label for="fAdset">Ad set</label>
-          <select id="fAdset"><option value="ALL">All ad sets</option></select>
-        </div>
-        <div class="f narrow" id="fIncomeWrap" hidden>
-          <label for="fIncome">Income</label>
-          <select id="fIncome"><option value="ALL">All incomes</option></select>
-        </div>
         <div class="f narrow">
           <label for="fRange">Date range</label>
           <select id="fRange">
@@ -777,17 +1237,28 @@ if (localStorage.getItem("santermedia.theme") === "dark") {
             <input type="date" id="fFrom"><input type="date" id="fTo">
           </span>
         </div>
-        <div class="f">
-          <label>View</label>
-          <div class="seg" id="levelSeg" role="group" aria-label="Level">
-            <span class="seg-indicator"></span>
-            <button data-view="campaign" aria-pressed="true">Campaigns</button>
-            <button data-view="adset">Ad sets</button>
-            <button data-view="ad">Ads</button>
-          </div>
+        <div class="f narrow">
+          <label for="fCampaign">Campaign</label>
+          <select id="fCampaign"><option value="ALL">All campaigns</option></select>
         </div>
+        <div class="f narrow">
+          <label for="fAdset">Ad set</label>
+          <select id="fAdset"><option value="ALL">All ad sets</option></select>
+        </div>
+        <div class="f narrow" id="fIncomeWrap" hidden>
+          <label for="fIncome">Income</label>
+          <select id="fIncome"><option value="ALL">All incomes</option></select>
+        </div>
+        <div class="f narrow">
+          <label for="fCampaignSearch">Search campaigns</label>
+          <input id="fCampaignSearch" type="search" placeholder="Search campaigns">
+        </div>
+        <span class="spacer"></span>
+        <button id="btnReload" class="primary">Re-sync</button>
+        <button id="btnExport" class="ghost">Export CSV</button>
       </div>
     </div>
+    <div class="groups-row"><span class="gl">Columns</span><div class="groups" id="groups"></div></div>
     <div class="tscroll">
       <table id="tbl">
         <thead id="thead"></thead>
@@ -797,6 +1268,13 @@ if (localStorage.getItem("santermedia.theme") === "dark") {
     </div>
     <div class="empty" id="emptyState" hidden></div>
   </section>
+  </div>
+
+  <div id="dashboardView" hidden>
+  <div class="page-head">
+    <h1 class="page-title">Dashboard</h1>
+    <div class="range-pill" data-range-pill><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span></span></div>
+  </div>
 
   <!-- ── Stage conversion rates ───────────────────────────── -->
   <section class="card draggable-card" style="margin-top:14px" data-card-id="conv">
@@ -1262,6 +1740,19 @@ if (localStorage.getItem("santermedia.theme") === "dark") {
 </div>
 
 <!-- ── Nav drawer ─────────────────────────────────────────── -->
+<nav class="mnav" aria-label="Main">
+  <button type="button" data-tab="glance" aria-current="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11 12 4l8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></svg>Home</button>
+  <button type="button" data-tab="mcamp"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>Campaigns</button>
+  <button type="button" data-tab="mleads"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 5.5a3 3 0 0 1 0 5.5M18 14.5c1.9.7 3 2.5 3 5.5"/></svg>Leads</button>
+  <button type="button" data-tab="mmore"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>More</button>
+</nav>
+
+<div id="sheetScrim" class="sheet-scrim"></div>
+<section id="leadSheet" class="lead-sheet" role="dialog" aria-label="Lead details" aria-hidden="true">
+  <div class="sheet-grab" id="sheetGrab"></div>
+  <div id="sheetBody"></div>
+</section>
+
 <div id="drawerScrim" class="drawer-scrim" hidden></div>
 <nav id="drawer" class="drawer" aria-hidden="true">
   <div class="drawer-head">
@@ -1488,7 +1979,7 @@ addEventListener("resize", () => {
     or a bare spinner. render() unconditionally overwrites this once real
     data lands. */
 function showSkeleton() {
-  $("#kpis").innerHTML = Array.from({ length: 7 }, () => `
+  $("#kpis").innerHTML = Array.from({ length: 5 }, () => `
     <div class="card tile skel">
       <span class="skel-line" style="width:50%"></span>
       <span class="skel-line lg" style="width:65%"></span>
@@ -1502,7 +1993,7 @@ function showSkeleton() {
 /** Sliding page transition — the outgoing view is swapped for hidden
     instantly (as before, so any layout math a page's render() does still
     sees real dimensions), the incoming one fades/slides up on top of it. */
-const PAGE_IDS = { dashboard: "dashboardView", leads: "leadsView", analytics: "analyticsView",
+const PAGE_IDS = { mcamp: "mCampView", mleads: "mLeadsView", mmore: "mMoreView", glance: "glanceView", ads: "adsView", dashboard: "dashboardView", leads: "leadsView", analytics: "analyticsView",
   sales: "salesView", survey: "surveyView", customers: "customersView", daily: "dailyView" };
 function animatePageIn(el) {
   if (!el) return;
@@ -1553,7 +2044,7 @@ const state = {
   campaign: "ALL", adset: "ALL", campaignSearch: "", income: "ALL",
   attribution: "first_opt_in",
   currency: "$",
-  page: "dashboard",
+  page: matchMedia("(max-width:700px)").matches ? "glance" : "ads",
   leadFilter: "all",
   leadsRange: "all", leadsFrom: "", leadsTo: "",
   untrackedBy: "ad",
@@ -1570,7 +2061,8 @@ const state = {
             purchUrl: DEFAULT_PURCH_URL, surveyUrl: DEFAULT_SURVEY_URL,
             text: "", refText: "", leadsText: "", introText: "", callsText: "", purchText: "", surveyText: "" },
   view: "campaign",        // campaign | adset | ad — the TOP row type
-  expanded: new Set(),     // open sub-rows, keyed "<level>:<id>"
+  expanded: new Set(),
+  selected: new Set(),     // open sub-rows, keyed "<level>:<id>"
   sort: { col: "cost", dir: -1 },
   hidden: new Set(),                          // hidden column groups
 };
@@ -2628,7 +3120,7 @@ function slotted(cols) {
     const first = i === 0 || cols[i - 1].g !== c.g;
     const last  = i === cols.length - 1 || cols[i + 1].g !== c.g;
     if (i > 0 && first) out.push(null);
-    out.push({ c, cls: [first && "bstart", last && "bend"].filter(Boolean).join(" ") });
+    out.push({ c, cls: [first && "bstart", last && "bend", "g-" + c.g, c.k === "cost" && "stick2"].filter(Boolean).join(" ") });
   });
   return out;
 }
@@ -2682,13 +3174,20 @@ function render() {
   // happened, ad-linked or not — Cost, and the campaign table below, stay
   // ad-only, since there is no spend and no funnel step to attribute for
   // the rest.
-  renderKpis({ ...t, leads: t.leads + u.leads, intro_calls: t.intro_calls + u.intro_calls,
-               booked_calls: t.booked_calls + u.booked_calls,
-               jobs: t.jobs + u.jobs, revenue: t.revenue + u.revenue });
+  const picked = selectedEntities();
+  const scoped = scopeInfo(level());
+  renderKpis(picked.length ? sum(picked.flatMap((e) => e.src))
+    : scoped ? sum(scopeFor(level()))
+    : { ...t, leads: t.leads + u.leads, intro_calls: t.intro_calls + u.intro_calls,
+        booked_calls: t.booked_calls + u.booked_calls,
+        jobs: t.jobs + u.jobs, revenue: t.revenue + u.revenue }, picked.length, scoped);
+  renderRangePill();
+  renderTabCounts();
+  renderGlance();
   renderConv(t);
   syncLevelSeg();
   renderGroups();
-  renderTable(t);
+  renderTable(tableTotals());
   renderUntracked();
   updateSegIndicator($("#utBySeg"));
   renderLast7();
@@ -2701,8 +3200,10 @@ function render() {
   renderRevenueBreakdown();
   const w = windowDates();
   const rangeTxt = rangeLabel(state.range, w);
-  $("#convNote").textContent = `${rangeTxt} · ${ATTR_LABEL[state.attribution]} attribution`;
+  $("#convNote").textContent = rangeTxt;
   // A Refresh click should update whichever page is actually on screen.
+  if (state.page === "mcamp") renderMCamp();
+  if (state.page === "mleads") renderMLeads();
   if (state.page === "analytics") renderAnalyticsPage();
   if (state.page === "sales") renderSalesPerformance();
   if (state.page === "survey") renderSurveyPage();
@@ -2870,7 +3371,7 @@ function surveyFiltered() {
     The .stick column (Leads' frozen first column) is left alone — it's
     sized independently via --name-col-w, not a per-th style. */
 function autoFitTable(table) {
-  if (!table) return;
+  if (!table || !table.offsetWidth) return;   // hidden / empty: nothing to measure yet
   const container = table.closest(".tscroll");
   const stickTh = table.querySelector("thead th.stick");
   const stickW = stickTh ? stickTh.getBoundingClientRect().width : 0;
@@ -3958,34 +4459,378 @@ $("#spRange").addEventListener("change", (e) => {
 $("#spFrom").addEventListener("change", (e) => { state.spFrom = e.target.value; renderSalesPerformance(); });
 $("#spTo").addEventListener("change",   (e) => { state.spTo   = e.target.value; renderSalesPerformance(); });
 
-function renderKpis(t) {
+function renderKpis(t, picked = 0, scoped = null) {
   const m = metrics(t);
   const tiles = [
-    { label: "Cost",    value: cur(t.cost),
-      sub: `${fmt(t.impressions)} impressions · ${cur(m.cpc)} CPC` },
-    { label: "Leads",   value: fmt(t.leads),   kind: "leads",
-      sub: t.leads ? `${cur(m.cpl)} / lead` : "—" },
-    { label: "Intro calls", value: fmt(t.intro_calls), kind: "intro",
-      sub: t.intro_calls ? `${cur(m.cpintro)} / intro` : "—" },
-    { label: "Demo calls", value: fmt(t.booked_calls), kind: "calls",
-      sub: t.booked_calls ? `${cur(m.cpcall)} / call` : "—" },
-    { label: "Closed",  value: fmt(t.jobs),   kind: "closes",
-      sub: t.leads ? `${(div(t.jobs, t.leads) * 100).toFixed(1)}% of leads` : "—" },
-    { label: "CPA",     value: t.jobs ? cur(m.cpjob) : "—",
-      sub: "spend ÷ closed" },
-    { label: "Revenue", value: cur(t.revenue),
-      sub: `${m.roas > 0 ? m.roas.toFixed(2) + "× ROAS" : "no revenue"} · AOV ${cur(m.aov)}` },
+    { label: "Spend", value: cur(t.cost), cls: "t-traffic" },
+    { label: "Leads", value: fmt(t.leads), kind: "leads", cls: "t-leads" },
+    { label: "Cost per lead", value: t.leads ? cur(m.cpl) : "—", cls: "t-leads" },
+    { label: "Revenue", value: cur(t.revenue), cls: "t-sales" },
+    { label: "ROAS", value: m.roas > 0 ? m.roas.toFixed(2) + "x" : "—", cls: "t-sales" },
   ];
   $("#kpis").innerHTML = tiles.map((x) => {
-    const open = x.kind && x.value !== "0" && x.value !== "—";
+    const open = x.kind && x.value !== "0" && x.value !== "—" && !picked && !scoped;
     return `
-    <div class="card tile">
+    <div class="card tile ${x.cls}">
       <span class="label">${x.label}</span>
       <span class="value${open ? " people" : ""}"${open ? ` data-p="${x.kind}"` : ""}>${x.value}</span>
-      <span class="sub">${x.sub}</span>
     </div>`;
   }).join("");
+  const what = { campaign: "campaigns", adset: "ad sets", ad: "ads" }[level()];
+  const one = { campaign: "campaign", adset: "ad set", ad: "ad" }[level()];
+  const next = { campaign: "Open the Ad Sets tab to see only theirs. ", adset: "Open the Ads tab to see only theirs. ", ad: "" }[level()];
+  $("#kpiNote").innerHTML = picked
+    ? `Showing ${picked} selected ${picked === 1 ? one : what}${scoped ? ` (in ${scoped.text})` : ""}. ${next}<button type="button" class="linklike" id="btnClearSel">Clear selection</button>.`
+    : scoped
+      ? `Showing only ${what} in ${scoped.text}. Tick rows to narrow further, or <button type="button" class="linklike" id="btnClearScope">show all ${what}</button>.`
+      : `Showing all ${what}. Tick rows below to see just those${level() === "ad" ? "" : `, then open the ${level() === "campaign" ? "Ad Sets" : "Ads"} tab to see only theirs`}.`;
 }
+
+/** The date pill beside the page title, e.g. "All time: 12/08/2026 - 05/10/2026". */
+function renderRangePill() {
+  const w = windowDates();
+  let from = w.from, to = w.to;
+  if (state.range === "all") {
+    const ds = state.rows.map((r) => r.date).filter(Boolean).sort();
+    from = ds[0] || ""; to = ds[ds.length - 1] || "";
+  }
+  const dmy = (d) => (d && /^\d{4}-\d{2}-\d{2}/.test(d)) ? `${d.slice(8, 10)}/${d.slice(5, 7)}/${d.slice(0, 4)}` : "";
+  const label = rangeLabel(state.range, w);
+  const lead = state.range === "custom" ? "" : label.charAt(0).toUpperCase() + label.slice(1) + ": ";
+  const txt = from || to ? `${lead}${dmy(from)} - ${dmy(to)}` : lead.replace(/: $/, "");
+  document.querySelectorAll("[data-range-pill] span").forEach((el) => { el.textContent = txt; });
+}
+
+function renderTabCounts() {
+  $("#cntCampaign").textContent = groupBy(scopeFor("campaign"), "campaign").length;
+  $("#cntAdset").textContent = groupBy(scopeFor("adset"), "adset").length;
+  $("#cntAd").textContent = groupBy(scopeFor("ad"), "ad").length;
+}
+/* ── At a glance: the headline numbers, nothing more ─────────── */
+function inWindowRows(from, to) {
+  const q = state.campaignSearch.trim().toLowerCase();
+  return incomeFilteredRows().filter((r) => r.date >= from && r.date <= to &&
+    (state.campaign === "ALL" || r.campaign_id === state.campaign) &&
+    (state.adset === "ALL" || r.adset_id === state.adset) &&
+    (!q || (r.campaign_name || "").toLowerCase().includes(q)));
+}
+function glanceTotals(from, to) {
+  const t = sum(inWindowRows(from, to));
+  const u = [...untracked.values()].filter((e) => e.date >= from && e.date <= to)
+    .reduce((a, e) => { a.leads += e.leads; a.intro_calls += e.intro_calls; a.booked_calls += e.booked_calls;
+      a.jobs += e.jobs; a.revenue += e.revenue; return a; }, { leads: 0, intro_calls: 0, booked_calls: 0, jobs: 0, revenue: 0 });
+  return { ...t, leads: t.leads + u.leads, intro_calls: t.intro_calls + u.intro_calls,
+    booked_calls: t.booked_calls + u.booked_calls, jobs: t.jobs + u.jobs, revenue: t.revenue + u.revenue };
+}
+function prevWindow(w) {
+  if (state.range === "all") return null;
+  const days = Math.round((dateFromYMD(w.to) - dateFromYMD(w.from)) / 864e5) + 1;
+  if (!(days > 0) || days > 3700) return null;
+  return { from: isoStep(w.from, -days), to: isoStep(w.from, -1) };
+}
+function glanceDelta(now, before, good) {
+  if (!(before > 0) || !(now >= 0)) return "";
+  const ch = (now - before) / before;
+  if (Math.abs(ch) < 0.005) return '<span class="d">No change vs before</span>';
+  const up = ch > 0, ok = good === "neutral" ? null : good === "up" ? up : !up;
+  return `<span class="d ${ok === null ? "" : ok ? "good" : "bad"}">${up ? "▲" : "▼"} ${Math.round(Math.abs(ch) * 100)}% vs before</span>`;
+}
+function renderGlance() {
+  if (!$("#glanceView")) return;
+  const w = windowDates();
+  const t = glanceTotals(w.from, w.to), m = metrics(t);
+  const pw = prevWindow(w);
+  const pt = pw ? glanceTotals(pw.from, pw.to) : null, pm = pt ? metrics(pt) : null;
+  const when = { all: "All time", today: "Today", yesterday: "Yesterday", lastweek: "Last week", mtd: "This month", custom: "Custom range" }[state.range] || `Last ${state.range} days`;
+  $("#glSub").textContent = when + (pw ? ", compared with the period before" : "");
+  [...$("#glRange").children].forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.r === state.range)));
+
+  const tiles = [
+    { l: "Spend", v: cur(t.cost), d: glanceDelta(t.cost, pt && pt.cost, "neutral"), c: "t-traffic" },
+    { l: "Leads", v: fmt(t.leads), d: glanceDelta(t.leads, pt && pt.leads, "up"), c: "t-leads" },
+    { l: "Cost per lead", v: t.leads ? cur(m.cpl) : "—", d: t.leads && pm ? glanceDelta(m.cpl, pm.cpl, "down") : "", c: "t-leads" },
+    { l: "Revenue", v: cur(t.revenue), d: `<span class="d">${m.roas > 0 ? m.roas.toFixed(2) + "x return on spend" : "No sales yet"}</span>`, c: "t-sales" },
+  ];
+  $("#glHero").innerHTML = tiles.map((x) =>
+    `<div class="gl-tile ${x.c}"><span class="l">${x.l}</span><span class="v">${x.v}</span>${x.d || '<span class="d">&nbsp;</span>'}</div>`).join("");
+
+  const pi = (a, b) => (b > 0 ? Math.round((a / b) * 100) + "%" : "—");
+  const steps = [
+    ["Leads", t.leads, "#8b6cf0", t.leads ? cur(m.cpl) + " each" : ""],
+    ["Intro calls", t.intro_calls, "#f08a82", pi(t.intro_calls, t.leads) + " of leads"],
+    ["Demo calls", t.booked_calls, "#3bb8cc", pi(t.booked_calls, t.intro_calls) + " of intro calls"],
+    ["Closed", t.jobs, "#e5a82b", pi(t.jobs, t.booked_calls) + " of demo calls"],
+  ];
+  const top = Math.max(1, ...steps.map((x) => x[1]));
+  $("#glFunnel").innerHTML = steps.map((x) =>
+    `<div class="fn"><span class="fn-l">${x[0]}</span>
+       <div class="fn-track"><i style="width:${Math.max(x[1] ? 2 : 0, (x[1] / top) * 100)}%;background:${x[2]}"></i></div>
+       <span class="fn-v"><b>${fmt(x[1])}</b><small>${x[3]}</small></span></div>`).join("");
+
+  const days = last7Rows(7).slice().reverse();
+  const maxL = Math.max(1, ...days.map((d) => d.leads));
+  const cost7 = days.reduce((a, d) => a + d.cost, 0), leads7 = days.reduce((a, d) => a + d.leads, 0);
+  $("#glBarsNote").textContent = `${cur(cost7)} spent, ${fmt(leads7)} leads this week`;
+  $("#glBars").innerHTML = `<div class="gl-bars">${days.map((d, i) =>
+    `<div class="gl-bar${i === days.length - 1 ? " today" : ""}"><span class="n">${d.leads ? fmt(d.leads) : ""}</span>
+       <i style="height:${Math.round((d.leads / maxL) * 100)}%"></i>
+       <span class="dl">${dateFromYMD(d.date).toLocaleDateString(undefined, { weekday: "short" })}</span></div>`).join("")}</div>`;
+
+  const today = ymdLocal(new Date()), yest = isoStep(today, -1);
+  const recent = allLeads.map((p, i) => ({ p, i }))
+    .sort((a, b) => (b.p.date || "").localeCompare(a.p.date || "") || b.i - a.i).slice(0, 8).map((x) => x.p);
+  const tints = [["#e3f5ec", "#166534"], ["#eeeafc", "#5b21b6"], ["#fdeceb", "#b42318"], ["#e0f6f8", "#0e7490"], ["#fff1d1", "#92400e"]];
+  const status = (p) => p.purchased ? ["Purchased", "#fff1d1", "#92400e"] : p.booked ? ["Demo call", "#e0f6f8", "#0e7490"]
+    : p.introCalled ? ["Intro call", "#fdeceb", "#b42318"] : ["New", "#eef0f3", "#4b5563"];
+  $("#glLeads").innerHTML = recent.length ? recent.map((p) => {
+    const nm = (p.name || p.email || "?").trim(), init = nm.split(/\s+/).slice(0, 2).map((x) => x[0]).join("").toUpperCase();
+    const tint = tints[[...nm].reduce((a, c) => a + c.charCodeAt(0), 0) % tints.length], st = status(p);
+    const when = p.date === today ? "Today" : p.date === yest ? "Yesterday"
+      : dateFromYMD(p.date).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+    return `<button type="button" class="lead" data-lead="${allLeads.indexOf(p)}"><span class="av" style="background:${tint[0]};color:${tint[1]}">${esc(init)}</span>
+      <div class="lead-main"><b>${esc(nm)}</b><small>${esc(leadCampaign(p))}</small></div>
+      <div class="lead-side"><span class="chip" style="background:${st[1]};color:${st[2]}">${st[0]}</span><small>${when}</small></div></button>`;
+  }).join("") : '<div class="empty" style="padding:24px 0">No leads yet.</div>';
+
+  const camps = groupBy(inWindowRows(w.from, w.to), "campaign").sort((a, b) => b.cost - a.cost).slice(0, 5);
+  const maxC = Math.max(1, ...camps.map((c) => c.cost));
+  $("#glCamps").innerHTML = camps.length ? camps.map((c) => {
+    const cm = metrics(c);
+    return `<div class="cp"><div class="cp-top"><span class="cp-name" title="${esc(c.name)}">${esc(c.name)}</span><b>${cur(c.cost)}</b></div>
+      <div class="cp-bar"><i style="width:${Math.max(2, (c.cost / maxC) * 100)}%"></i></div>
+      <div class="cp-stats"><span>${fmt(c.leads)} leads</span><span>${c.leads ? cur(cm.cpl) + " each" : "no leads yet"}</span></div></div>`;
+  }).join("") : '<div class="empty" style="padding:24px 0">No campaigns in this range.</div>';
+}
+$("#glRange").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-r]"); if (!b) return;
+  state.range = b.dataset.r;
+  $("#fRange").value = state.range;
+  $("#customWrap").hidden = true;
+  render();
+});
+$("#glanceView").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-go]"); if (b) setPage(b.dataset.go);
+});
+
+/* ═══════════ Phone app: tabs, campaigns, leads, more, lead sheet ═══ */
+const dayText = (v) => {
+  const iso = normDate(v);
+  return iso ? dateFromYMD(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : "";
+};
+const leadStatus = (p) => p.purchased ? { t: "Purchased", bg: "#fff1d1", ink: "#92400e" }
+  : p.booked ? { t: "Demo call", bg: "#e0f6f8", ink: "#0e7490" }
+  : p.introCalled ? { t: "Intro call", bg: "#fdeceb", ink: "#b42318" } : { t: "New", bg: "#eef0f3", ink: "#4b5563" };
+const AV_TINTS = [["#e3f5ec", "#166534"], ["#eeeafc", "#5b21b6"], ["#fdeceb", "#b42318"], ["#e0f6f8", "#0e7490"], ["#fff1d1", "#92400e"]];
+const avTint = (nm) => AV_TINTS[[...nm].reduce((a, c) => a + c.charCodeAt(0), 0) % AV_TINTS.length];
+const initialsOf = (nm) => nm.trim().split(/\s+/).slice(0, 2).map((x) => x[0]).join("").toUpperCase();
+const capFirst = (t) => t.charAt(0).toUpperCase() + t.slice(1);
+function dayHead(iso) {
+  const t = ymdLocal(new Date());
+  if (iso === t) return "Today";
+  if (iso === isoStep(t, -1)) return "Yesterday";
+  return dateFromYMD(iso).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
+}
+const sortedLeads = () => allLeads.map((p, i) => ({ p, i }))
+  .sort((a, b) => (b.p.date || "").localeCompare(a.p.date || "") || b.i - a.i).map((x) => x.p);
+
+/* — Lead details: a sheet that slides up from the bottom — */
+function leadSheetHTML(p) {
+  const nm = p.name || p.email || "Unknown", av = avTint(nm), st = leadStatus(p);
+  const row = (k, v) => v ? `<div class="sh-row"><span>${k}</span><b>${esc(v)}</b></div>` : "";
+  const step = (label, when, done) =>
+    `<div class="sh-step${done ? " done" : ""}"><div class="sh-dot"><i></i><u></u></div><div class="sh-st"><b>${label}</b><small>${esc(when)}</small></div></div>`;
+  return `<div class="sh-head">
+      <span class="av lg" style="background:${av[0]};color:${av[1]}">${esc(initialsOf(nm))}</span>
+      <div class="sh-who"><b>${esc(nm)}</b><span class="chip" style="background:${st.bg};color:${st.ink}">${st.t}</span></div>
+      <button type="button" class="sh-close" data-sheet-close aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+    <div class="sh-card">
+      ${row("Email", p.email)}${row("Campaign", leadCampaign(p) !== "—" ? leadCampaign(p) : "")}
+      ${row("Ad set", leadAdset(p) !== "—" ? leadAdset(p) : "")}${row("Ad", leadAd(p) !== "—" ? leadAd(p) : "")}
+    </div>
+    <h3 class="sh-h">Progress</h3>
+    <div class="sh-steps">
+      ${step("Opted in", dayText(p.date) || "Unknown", true)}
+      ${step("Intro call", p.introCalled ? (dayText(p.introCallDate) || "Booked") : "Not yet", p.introCalled)}
+      ${step("Demo call", p.booked ? (dayText(p.bookedDate) || "Booked") : "Not yet", p.booked)}
+      ${step("Purchase", p.purchased ? `${cur(p.purchaseAmount)}${dayText(p.purchaseDate) ? " on " + dayText(p.purchaseDate) : ""}` : "Not yet", p.purchased)}
+    </div>`;
+}
+function openLeadSheet(p) {
+  if (!p) return;
+  $("#sheetBody").innerHTML = leadSheetHTML(p);
+  const sh = $("#leadSheet");
+  sh.style.transform = "";
+  sh.scrollTop = 0;
+  sh.setAttribute("aria-hidden", "false");
+  void sh.offsetWidth;   // commit the closed position first so the slide-up animates
+  sh.classList.add("on"); $("#sheetScrim").classList.add("on");
+  document.body.style.overflow = "hidden";
+}
+function closeLeadSheet() {
+  const sh = $("#leadSheet");
+  if (!sh || !sh.classList.contains("on")) return;
+  sh.classList.remove("on", "dragging");
+  sh.style.transform = "";
+  $("#sheetScrim").classList.remove("on");
+  sh.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+}
+$("#sheetScrim").addEventListener("click", closeLeadSheet);
+$("#leadSheet").addEventListener("click", (e) => { if (e.target.closest("[data-sheet-close]")) closeLeadSheet(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeLeadSheet(); });
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("[data-lead]"); if (!b) return;
+  openLeadSheet(allLeads[+b.dataset.lead]);
+});
+/* drag the handle (or header) down to dismiss */
+(() => {
+  const sh = $("#leadSheet"); let y0 = null, dy = 0;
+  sh.addEventListener("touchstart", (e) => {
+    if (sh.scrollTop > 0 && !e.target.closest("#sheetGrab")) return;
+    y0 = e.touches[0].clientY; dy = 0;
+  }, { passive: true });
+  sh.addEventListener("touchmove", (e) => {
+    if (y0 === null) return;
+    dy = e.touches[0].clientY - y0;
+    if (dy > 0) { sh.classList.add("dragging"); sh.style.transform = `translateY(${dy}px)`; }
+  }, { passive: true });
+  sh.addEventListener("touchend", () => {
+    if (y0 === null) return;
+    sh.classList.remove("dragging");
+    if (dy > 90) closeLeadSheet(); else sh.style.transform = "";
+    y0 = null; dy = 0;
+  });
+})();
+
+/* — Bottom tab bar — */
+$(".mnav").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-tab]"); if (!b) return;
+  if (b.dataset.tab === "mcamp") mCampSel = null;
+  setPage(b.dataset.tab);
+});
+
+/* — Campaigns: tap a campaign to see only its ad sets and ads — */
+let mCampSel = null;
+const mTile = (label, value, cls) => `<div class="m-tile ${cls}"><span>${label}</span><b>${value}</b></div>`;
+function renderMCamp() {
+  const el = $("#mCampView"); if (!el) return;
+  const rows = filtered(), w = windowDates();
+  const eyebrow = capFirst(rangeLabel(state.range, w));
+  if (!mCampSel) {
+    const camps = groupBy(rows, "campaign").map((c) => ({ c, last: c.src.reduce((m, r) => (r.date > m ? r.date : m), "") }))
+      .sort((a, b) => b.last.localeCompare(a.last) || b.c.cost - a.c.cost);
+    const t = glanceTotals(w.from, w.to), tm = metrics(t), linked = sum(rows), maxC = Math.max(1, ...camps.map((x) => x.c.cost));
+    const newCut = isoStep(ymdLocal(new Date()), -7);
+    el.innerHTML = `<div class="m-head"><span class="m-eyebrow">${eyebrow}</span><h1 class="page-title">Campaigns</h1></div>
+      <div class="m-tiles" style="--n:3">${mTile("Spend", cur(t.cost), "t-traffic")}${mTile("Leads", fmt(t.leads), "t-leads")}${mTile("Per lead", t.leads ? cur(tm.cpl) : "—", "t-leads")}</div>
+      <div class="m-sort">Newest first</div>
+      ${camps.length ? camps.map(({ c, last }) => {
+        const cm = metrics(c), fresh = c.src.every((r) => r.date >= newCut) && last >= newCut;
+        return `<button type="button" class="m-card" data-camp="${esc(c.id)}">
+          <div class="m-card-top"><b>${esc(c.name)}</b>${fresh ? '<span class="m-badge">New</span>' : ""}${'<svg width="16" height="16" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4.5 2.5 8 6l-3.5 3.5"/></svg>'}</div>
+          <div class="m-bar"><i style="width:${Math.max(2, (c.cost / maxC) * 100)}%"></i></div>
+          <div class="m-stats"><div><span>Spend</span><b>${cur(c.cost)}</b></div><div><span>Leads</span><b>${fmt(c.leads)}</b></div><div><span>Per lead</span><b>${c.leads ? cur(cm.cpl) : "No leads"}</b></div></div></button>`;
+      }).join("") : '<div class="empty">No campaigns in this range.</div>'}
+      ${t.leads > linked.leads ? `<div class="m-more" style="margin:4px 4px 0">${fmt(t.leads - linked.leads)} more leads came from sources that aren't tied to an ad.</div>` : ""}`;
+    return;
+  }
+  const camp = groupBy(rows, "campaign").find((c) => c.id === mCampSel);
+  if (!camp) { mCampSel = null; renderMCamp(); return; }
+  const sets = groupBy(camp.src, "adset").sort((a, b) => b.cost - a.cost), cmx = metrics(camp);
+  const adCount = groupBy(camp.src, "ad").length;
+  el.innerHTML = `<button type="button" class="m-back" data-camp-back><svg width="18" height="18" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" style="transform:rotate(180deg)"><path d="M4.5 2.5 8 6l-3.5 3.5"/></svg>Campaigns</button>
+    <div class="m-head"><h1 class="page-title" style="font-size:20px;line-height:1.25">${esc(camp.name)}</h1><span class="m-eyebrow">${sets.length} ad set${sets.length === 1 ? "" : "s"}, ${adCount} ad${adCount === 1 ? "" : "s"} · ${eyebrow.toLowerCase()}</span></div>
+    <div class="m-tiles" style="--n:4">${mTile("Spend", cur(camp.cost), "t-traffic")}${mTile("Leads", fmt(camp.leads), "t-leads")}${mTile("Per lead", camp.leads ? cur(cmx.cpl) : "—", "t-leads")}${mTile("Intros", fmt(camp.intro_calls), "t-intro")}</div>
+    ${sets.map((s) => {
+      const ads = groupBy(s.src, "ad").sort((a, b) => b.cost - a.cost), top = ads.slice(0, 5), mx = Math.max(1, ...top.map((a) => a.cost));
+      return `<section class="m-set"><span class="m-eyebrow up">Ad set</span><b class="m-set-n">${esc(s.name)}</b>
+        <div class="m-stats four"><div><span>Spend</span><b>${cur(s.cost)}</b></div><div><span>Leads</span><b>${fmt(s.leads)}</b></div><div><span>Intro calls</span><b>${fmt(s.intro_calls)}</b></div><div><span>Demo calls</span><b>${fmt(s.booked_calls)}</b></div></div>
+        <div class="m-ads-h">Ads, by spend</div>
+        ${top.map((a) => `<div class="m-ad"><span class="m-ad-n">${esc(a.name)}</span><div class="m-bar thin"><i style="width:${Math.max(2, (a.cost / mx) * 100)}%"></i></div>
+          <div class="m-ad-s"><span><b>${cur(a.cost)}</b> spent</span><span><b>${fmt(a.leads)}</b> leads</span><span><b>${fmt(a.intro_calls)}</b> intros</span></div></div>`).join("")}
+        ${ads.length > top.length ? `<div class="m-more">+ ${ads.length - top.length} more ads</div>` : ""}</section>`;
+    }).join("")}`;
+}
+$("#mCampView").addEventListener("click", (e) => {
+  const c = e.target.closest("[data-camp]");
+  if (c) { mCampSel = c.dataset.camp; renderMCamp(); window.scrollTo(0, 0); return; }
+  if (e.target.closest("[data-camp-back]")) { mCampSel = null; renderMCamp(); window.scrollTo(0, 0); }
+});
+
+/* — Leads: searchable list, newest first — */
+const mLead = { f: "all", q: "", shown: 40 };
+function renderMLeads() {
+  const list = $("#mLeadList"); if (!list) return;
+  const all = sortedLeads(), q = mLead.q.trim().toLowerCase();
+  const keep = (p) => (mLead.f === "all" || (mLead.f === "intro" && p.introCalled) || (mLead.f === "booked" && p.booked) || (mLead.f === "purchased" && p.purchased))
+    && (!q || (p.name || "").toLowerCase().includes(q) || (p.email || "").toLowerCase().includes(q));
+  const shown = all.filter(keep);
+  $("#mLeadChips").innerHTML = [["all", "All", all.length], ["intro", "Intro call", all.filter((p) => p.introCalled).length],
+    ["booked", "Demo call", all.filter((p) => p.booked).length], ["purchased", "Purchased", all.filter((p) => p.purchased).length]]
+    .map(([k, l, n]) => `<button type="button" data-f="${k}" aria-pressed="${mLead.f === k}">${l} <i>${n}</i></button>`).join("");
+  const page = shown.slice(0, mLead.shown);
+  let html = "", cur_ = null, open = false;
+  page.forEach((p) => {
+    const d = p.date || "";
+    if (d !== cur_) {
+      if (open) html += "</div>";
+      html += `<div class="m-glabel">${d ? dayHead(d) : "No date"}</div><div class="m-group">`; open = true; cur_ = d;
+    }
+    const nm = p.name || p.email || "?", av = avTint(nm), st = leadStatus(p);
+    html += `<button type="button" class="m-lead" data-lead="${allLeads.indexOf(p)}"><span class="av" style="background:${av[0]};color:${av[1]}">${esc(initialsOf(nm))}</span>
+      <span class="m-lead-t"><b>${esc(nm)}</b><small>${esc(leadCampaign(p))}</small></span><span class="chip" style="background:${st.bg};color:${st.ink}">${st.t}</span></button>`;
+  });
+  if (open) html += "</div>";
+  if (!shown.length) html = `<div class="empty">${all.length ? "No leads match that." : "No leads loaded yet."}</div>`;
+  if (shown.length > page.length) html += `<button type="button" class="m-showmore" id="mLeadMore">Show more (${shown.length - page.length} left)</button>`;
+  list.innerHTML = html;
+  $("#mLeadEyebrow").textContent = `${all.length} in total`;
+}
+$("#mLeadChips").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-f]"); if (!b) return;
+  mLead.f = b.dataset.f; mLead.shown = 40; renderMLeads();
+});
+$("#mLeadSearch").addEventListener("input", (e) => { mLead.q = e.target.value; mLead.shown = 40; renderMLeads(); });
+$("#mLeadList").addEventListener("click", (e) => {
+  if (e.target.closest("#mLeadMore")) { mLead.shown += 40; renderMLeads(); }
+});
+
+/* — More: everything that isn't a phone tab — */
+const MORE_ITEMS = [
+  ["ads", "Ads Manager", "The full table, every column", "M4 5.5h16M4 12h16M4 18.5h16", "#e3f5ec", "#166534"],
+  ["dashboard", "Dashboard", "Conversion rates, survey, untracked", "M4 4h7v7H4ZM13 4h7v7h-7ZM4 13h7v7H4ZM13 13h7v7h-7Z", "#eeeafc", "#5b21b6"],
+  ["daily", "Daily breakdown", "Day by day and week by week", "M4 5.5h16M4 12h16M4 18.5h10", "#e0f6f8", "#0e7490"],
+  ["survey", "Survey answers", "What leads said about their gym", "M5 4h14v16H5ZM9 9h6M9 13h6M9 17h3", "#fff1d1", "#92400e"],
+  ["customers", "Customers", "Clients and lifetime value", "M12 3.5 4 7v5c0 4.5 3.2 7.5 8 8.5 4.8-1 8-4 8-8.5V7Z", "#fdeceb", "#b42318"],
+  ["sales", "Sales performance", "Closes and close rate", "M7 20V11M12 20V4M17 20v-6", "#e3f5ec", "#166534"],
+  ["analytics", "Analytics", "Spend and leads over time", "M4 18 9 12l4 3 7-9", "#eeeafc", "#5b21b6"],
+  ["__source", "Data source", "Point at a different sheet", "M4 7c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3ZM4 7v10c0 1.7 3.6 3 8 3s8-1.3 8-3V7", "#eef0f3", "#4b5563"],
+];
+function renderMMore() {
+  $("#mMoreList").innerHTML = MORE_ITEMS.map(([k, l, sub, d, bg, ink]) =>
+    `<button type="button" class="m-row" data-more="${k}"><span class="m-ico" style="background:${bg};color:${ink}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${d}"/></svg></span>
+      <span class="m-row-t"><b>${l}</b><small>${sub}</small></span><svg class="m-chev" width="16" height="16" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4.5 2.5 8 6l-3.5 3.5"/></svg></button>`).join("");
+  $("#mDark").setAttribute("aria-checked", String(document.documentElement.getAttribute("data-theme") === "dark"));
+  $("#mSyncNote").textContent = $("#acct").textContent || "Pull the latest from the Google Sheet";
+}
+$("#mMoreView").addEventListener("click", (e) => {
+  const m = e.target.closest("[data-more]");
+  if (m) { m.dataset.more === "__source" ? $("#btnSource").click() : setPage(m.dataset.more); return; }
+  if (e.target.closest("#mResync")) { boot().catch(() => {}); return; }
+  if (e.target.closest("#mDark")) { $("#btnTheme").click(); renderMMore(); }
+});
+
+$("#kpiNote").addEventListener("click", (e) => {
+  const lv = level();
+  if (e.target.closest("#btnClearSel")) {
+    [...state.selected].forEach((k) => { if (k.startsWith(lv + ":")) state.selected.delete(k); });
+  } else if (e.target.closest("#btnClearScope")) {
+    [...state.selected].forEach((k) => { if (!k.startsWith(lv + ":") && !(lv === "adset" && k.startsWith("ad:"))) state.selected.delete(k); });
+  } else return;
+  pruneSelection();
+  render();
+});
 
 function syncLevelSeg() {
   [...$("#levelSeg").children].forEach((b) =>
@@ -4385,6 +5230,65 @@ $("#weeklyWeeks").addEventListener("change", (e) => {
 });
 
 /* ── Table ───────────────────────────────────────────────────── */
+/* Facebook-style isolation: tick campaigns and the Ad sets tab shows only
+   their ad sets; tick ad sets (or, failing that, campaigns) and the Ads tab
+   shows only their ads. Ticks survive switching tabs. */
+const selIds = (lv) => new Set([...state.selected]
+  .filter((k) => k.startsWith(lv + ":")).map((k) => k.slice(lv.length + 1)));
+
+function scopeFor(lv, rows = filtered()) {
+  if (lv === "campaign") return rows;
+  const camps = selIds("campaign");
+  if (camps.size) rows = rows.filter((r) => camps.has(r.campaign_id));
+  if (lv === "ad") {
+    const sets = selIds("adset");
+    if (sets.size) rows = rows.filter((r) => sets.has(r.adset_id));
+  }
+  return rows;
+}
+
+/** { text } when ticks on a higher level narrow what this level shows, else null. */
+function scopeInfo(lv) {
+  if (lv === "campaign") return null;
+  const upstream = lv === "ad" && selIds("adset").size ? "adset" : selIds("campaign").size ? "campaign" : null;
+  if (!upstream) return null;
+  const ids = selIds(upstream), nameKey = upstream === "adset" ? "adset_name" : "campaign_name",
+        idKey = upstream === "adset" ? "adset_id" : "campaign_id", names = new Map();
+  filtered().forEach((r) => { if (ids.has(r[idKey])) names.set(r[idKey], r[nameKey] || r[idKey]); });
+  const list = [...names.values()];
+  const shown = list.slice(0, 2).join(", ") + (list.length > 2 ? ` +${list.length - 2} more` : "");
+  const noun = upstream === "adset" ? "ad set" : "campaign";
+  return { text: `${list.length} selected ${noun}${list.length === 1 ? "" : "s"}: ${shown}` };
+}
+
+/** Drop ticks that fell out of scope when a higher level changed. */
+function pruneSelection() {
+  const rows = filtered();
+  const camps = selIds("campaign");
+  const setCamp = new Map(rows.map((r) => [r.adset_id, r.campaign_id]));
+  [...state.selected].forEach((k) => {
+    if (k.startsWith("adset:") && camps.size && !camps.has(setCamp.get(k.slice(6)))) state.selected.delete(k);
+  });
+  const sets = selIds("adset");
+  const adInfo = new Map(rows.map((r) => [r.ad_id, r]));
+  [...state.selected].forEach((k) => {
+    if (!k.startsWith("ad:")) return;
+    const r = adInfo.get(k.slice(3));
+    if (!r || (camps.size && !camps.has(r.campaign_id)) || (sets.size && !sets.has(r.adset_id))) state.selected.delete(k);
+  });
+}
+
+/** Rows behind whatever is ticked at the current level (none = nothing ticked). */
+function selectedEntities() {
+  if (!state.selected.size) return [];
+  const lv = level();
+  return groupBy(scopeFor(lv), lv).filter((e) => state.selected.has(`${lv}:${e.id}`));
+}
+function tableTotals() {
+  const sel = selectedEntities();
+  return sel.length ? sum(sel.flatMap((e) => e.src)) : sum(scopeFor(level()));
+}
+
 function renderTable(totals) {
   const cols = visibleCols();
   const slots = slotted(cols);
@@ -4404,11 +5308,11 @@ function renderTable(totals) {
       }</th>${bands.map((b) =>
         `<th colspan="${b.n}" data-g="${b.g}">${GROUPS.find((x) => x.k === b.g).label}</th>`)
         .join('<th class="gap"></th>')}</tr>` +
-    `<tr class="cols"><th class="stick txt" data-k="name">Name${arrow("name")}<span class="col-resize" title="Drag to resize"></span></th>${
+    `<tr class="cols"><th class="stick txt" data-k="name">${lv === "campaign" ? "Campaign" : lv === "adset" ? "Ad set" : "Ad"}${arrow("name")}<span class="col-resize" title="Drag to resize"></span></th>${
       slots.map((s) => s ? `<th class="${s.cls}" data-k="${s.c.k}">${s.c.h}${arrow(s.c.k)}</th>`
                          : '<th class="gap"></th>').join("")}</tr>`;
 
-  const top = sortEntities(groupBy(filtered(), lv));
+  const top = sortEntities(groupBy(scopeFor(lv), lv));
   // A genuinely broken state (nothing loaded, or the fetch failed) has no
   // columns worth showing. An empty DATE RANGE on data that loaded fine is
   // different — the table shell and its columns are still meaningful, so
@@ -4417,7 +5321,7 @@ function renderTable(totals) {
   const nil = !blocked && top.length === 0;
 
   const tm = metrics(totals);
-  $("#tfoot").innerHTML = `<tr class="totals" data-key="__totals__"><td class="stick txt">TOTALS</td>${
+  $("#tfoot").innerHTML = `<tr class="totals" data-key="__totals__"><td class="stick txt">${selectedEntities().length ? `SELECTED (${selectedEntities().length})` : "TOTALS"}</td>${
     slots.map((s) => {
       if (!s) return GAP_TD;
       if (nil) {
@@ -4428,7 +5332,7 @@ function renderTable(totals) {
     }).join("")}</tr>`;
 
   ROW_KEYS.clear();
-  ROW_KEYS.set("__totals__", filtered().map((r) => `${r.date}|${r.ad_id}`));
+  ROW_KEYS.set("__totals__", (selectedEntities().length ? selectedEntities().flatMap((e) => e.src) : scopeFor(level())).map((r) => `${r.date}|${r.ad_id}`));
   const out = [];
   emitRows(top, lv, 0, slots, out);
   $("#tbody").innerHTML = out.join("");
@@ -4459,10 +5363,11 @@ function emitRows(list, lv, depth, slots, out) {
     const byAd = `<button type="button" class="row-by-ad" data-by-ad-key="${esc(key)}"
            data-by-ad-label="${esc(e.name)}" title="See survey breakdown">▤</button>`;
     out.push(
-      `<tr class="data d${depth}${child ? " expandable" : ""}${open ? " open" : ""}"
+      `<tr class="data d${depth}${child ? " expandable" : ""}${open ? " open" : ""}${state.selected.has(key) ? " sel" : ""}"
            data-key="${esc(key)}">
         <td class="stick txt">
-          <span class="nm" style="padding-left:${depth * 20}px">
+          <span class="nm" style="padding-left:${depth * 28}px">
+            ${depth === 0 ? `<input type="checkbox" class="row-sel" data-sel="${esc(key)}" aria-label="Select ${esc(e.name)}"${state.selected.has(key) ? " checked" : ""}>` : ""}
             ${chev}
             <span class="txt-el" title="${esc(e.name)}">${esc(e.name)}</span>
             ${byAd}
@@ -4474,13 +5379,18 @@ function emitRows(list, lv, depth, slots, out) {
   });
 }
 
+/** Currency with the symbol pinned left and the figure right, inside the cell. */
+function curHtml(v) {
+  const s = cur(v), i = s.search(/\d/);
+  return i < 0 ? s : `<span class="cur"><i>${s.slice(0, i)}</i><b>${s.slice(i)}</b></span>`;
+}
 /* A cell knows its own tint, so Profit/ROAS colour the box not the text. */
 function cell(c, r, m, extra = "") {
   const v = c.v(r, m);
   const kind = PEOPLE_COL[c.k];
   const open = kind && v > 0;
   const cls = [extra, c.cls ? c.cls(v) : "", open ? "people" : ""].filter(Boolean).join(" ");
-  const body = (c.z && v === 0) ? '<span class="dim">—</span>' : c.f(v);
+  const body = (c.z && v === 0) ? '<span class="dim">—</span>' : (c.f === cur ? curHtml(v) : c.f(v));
   return `<td${cls ? ` class="${cls}"` : ""}${open ? ` data-p="${kind}"` : ""}>${body}</td>`;
 }
 const ROW_KEYS = new Map();
@@ -4505,7 +5415,7 @@ function exportCSV() {
       if (child && state.expanded.has(`${lv}:${e.id}`))
         walk(sortEntities(groupBy(e.src, child)), child, depth + 1);
     });
-  })(sortEntities(groupBy(filtered(), level())), level(), 0);
+  })(sortEntities(groupBy(scopeFor(level()), level())), level(), 0);
   const csv = [head, ...body]
     .map((r) => r.map((c) => (/[",\r\n]/.test(String(c)) ? `"${String(c).replace(/"/g, '""')}"` : c)).join(","))
     .join("\r\n");
@@ -4769,6 +5679,14 @@ $("#utbody").addEventListener("click", (e) => {
 
 /* Clicking an expandable row slides its children in below it. */
 $("#tbody").addEventListener("click", (e) => {
+  const selBox = e.target.closest(".row-sel");
+  if (selBox) {
+    const k = selBox.dataset.sel;
+    state.selected.has(k) ? state.selected.delete(k) : state.selected.add(k);
+    pruneSelection();
+    render();
+    return;
+  }
   const byAdBtn = e.target.closest(".row-by-ad");
   if (byAdBtn) {
     showPeopleByAd(byAdBtn.dataset.byAdKey, byAdBtn.dataset.byAdLabel);
@@ -4778,7 +5696,7 @@ $("#tbody").addEventListener("click", (e) => {
   const tr = e.target.closest("tr.data.expandable"); if (!tr) return;
   const key = tr.dataset.key;
   state.expanded.has(key) ? state.expanded.delete(key) : state.expanded.add(key);
-  renderTable(sum(filtered()));
+  renderTable(tableTotals());
   renderUntracked();
 });
 $("#thead").addEventListener("click", (e) => {
@@ -5262,6 +6180,11 @@ function setPage(page) {
   const prevPage = state.page;
   if (prevPage && prevPage !== page) pageScroll[prevPage] = window.scrollY;
   state.page = page;
+  $("#mCampView").hidden = page !== "mcamp";
+  $("#mLeadsView").hidden = page !== "mleads";
+  $("#mMoreView").hidden = page !== "mmore";
+  $("#glanceView").hidden = page !== "glance";
+  $("#adsView").hidden = page !== "ads";
   $("#dashboardView").hidden = page !== "dashboard";
   $("#leadsView").hidden = page !== "leads";
   $("#analyticsView").hidden = page !== "analytics";
@@ -5272,6 +6195,14 @@ function setPage(page) {
   [...document.querySelectorAll(".drawer-item")].forEach((b) =>
     b.toggleAttribute("aria-current", b.dataset.page === page) ||
     (b.dataset.page === page ? b.setAttribute("aria-current", "page") : b.removeAttribute("aria-current")));
+  if (page === "mcamp") renderMCamp();
+  if (page === "mleads") renderMLeads();
+  if (page === "mmore") renderMMore();
+  document.querySelectorAll(".mnav button").forEach((b) => {
+    const on = b.dataset.tab === page || (b.dataset.tab === "mmore" && !["glance", "mcamp", "mleads", "mmore"].includes(page));
+    b.setAttribute("aria-current", String(on));
+  });
+  closeLeadSheet();
   if (page === "leads") renderLeadsPage();
   if (page === "analytics") renderAnalyticsPage();
   if (page === "sales") renderSalesPerformance();
@@ -5286,6 +6217,9 @@ function setPage(page) {
   closeDrawer();
 }
 $("#drawer").addEventListener("click", (e) => {
+  const b = e.target.closest(".drawer-item[data-page]"); if (b) setPage(b.dataset.page);
+});
+document.querySelector(".topnav").addEventListener("click", (e) => {
   const b = e.target.closest(".drawer-item[data-page]"); if (b) setPage(b.dataset.page);
 });
 
@@ -5334,13 +6268,13 @@ async function boot() {
     console.error(err);
     state.rows = [];
     loadError = err.message;
-    $("#btnReload").textContent = "Refresh";
+    $("#btnReload").textContent = "Re-sync";
     $("#acct").textContent = "Load failed";
     render();
     throw err;                       // the dialog reports it too
   }
   loadError = null;
-  $("#btnReload").textContent = "Refresh";
+  $("#btnReload").textContent = "Re-sync";
   render();
 }
 
@@ -5365,6 +6299,7 @@ try {
   $("#build").textContent = isNaN(b) ? "" : "build " +
     b.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 })();
+if (state.page !== "glance") setPage(state.page);   // desktop lands on Ads Manager
 boot().catch((e) => console.error(e));
 </script>
 </body>
