@@ -1116,8 +1116,8 @@ button.lead:last-child{border-bottom:0}
 @media(max-width:700px){.fn{grid-template-columns:68px minmax(0,1fr) 104px;gap:8px}}
 .gl-bars{display:flex;align-items:flex-end;gap:8px;height:150px}
 .gl-bar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;height:100%;min-width:0}
-.gl-bar i{display:block;width:100%;min-height:2px;border-radius:5px 5px 0 0;background:#b9a6f5}
-.gl-bar.today i{background:#8b6cf0}
+.gl-bar i{display:block;width:100%;min-height:2px;border-radius:5px 5px 0 0;background:#9fdcc0}
+.gl-bar.today i{background:#34b27b}
 .gl-bar .n{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;min-height:14px}
 .gl-bar .dl{font-size:11px;color:var(--muted)}
 .cp{padding:11px 0;border-bottom:1px solid var(--cell)}
@@ -1227,7 +1227,7 @@ if (localStorage.getItem("santermedia.theme") === "dark") {
   </section>
   <div class="gl-grid">
     <section class="gl-card">
-      <h2>Leads per day <span class="gl-note" id="glBarsNote"></span></h2>
+      <h2>Spend per day <span class="gl-note" id="glBarsNote"></span></h2>
       <div id="glBars"></div>
     </section>
     <section class="gl-card">
@@ -4629,12 +4629,12 @@ function renderGlance() {
        <span class="fn-v"><b>${fmt(x[1])}</b><small>${x[3]}</small></span></div>`).join("");
 
   const days = last7Rows(7).slice().reverse();
-  const maxL = Math.max(1, ...days.map((d) => d.leads));
-  const cost7 = days.reduce((a, d) => a + d.cost, 0), leads7 = days.reduce((a, d) => a + d.leads, 0);
-  $("#glBarsNote").textContent = `${cur(cost7)} spent, ${fmt(leads7)} leads this week`;
+  const maxS = Math.max(1, ...days.map((d) => d.cost));
+  const cost7 = days.reduce((a, d) => a + d.cost, 0);
+  $("#glBarsNote").textContent = `${cur(cost7)} in the last 7 days`;
   $("#glBars").innerHTML = `<div class="gl-bars">${days.map((d, i) =>
-    `<div class="gl-bar${i === days.length - 1 ? " today" : ""}"><span class="n">${d.leads ? fmt(d.leads) : ""}</span>
-       <i style="height:${Math.round((d.leads / maxL) * 100)}%"></i>
+    `<div class="gl-bar${i === days.length - 1 ? " today" : ""}"><span class="n">${d.cost ? km(d.cost) : ""}</span>
+       <i style="height:${Math.round((d.cost / maxS) * 100)}%"></i>
        <span class="dl">${dateFromYMD(d.date).toLocaleDateString(undefined, { weekday: "short" })}</span></div>`).join("")}</div>`;
 
   const today = ymdLocal(new Date()), yest = isoStep(today, -1);
