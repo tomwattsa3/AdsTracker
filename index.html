@@ -705,10 +705,25 @@ header.top #build{display:none}
 .tile{border-radius:14px;border:0;box-shadow:none;padding:20px 24px;gap:10px}
 .tile .label{font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
 .tile .value{font-size:36px;font-weight:700;line-height:1;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
-#kpis .tile .sub{display:none}
+/* Top stats: one strip on desktop, Spend + a 2x2 on phones. Each shows its count with its cost beneath. */
+#kpis{grid-template-columns:repeat(5,minmax(0,1fr));gap:1px;background:var(--border);border:1px solid var(--border);
+  border-radius:16px;overflow:hidden;margin-bottom:8px}
+#kpis .tile{border-radius:0;padding:16px 20px;gap:6px;align-items:flex-start;text-align:left}
+#kpis .tile .value{font-size:30px}
+#kpis .tile .sub{display:block;font-size:12.5px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+@media(max-width:1000px){#kpis .tile .value{font-size:24px}#kpis .tile{padding:14px 14px}}
+@media(max-width:700px){
+  #kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;background:transparent;border:0;border-radius:0;overflow:visible}
+  #kpis .tile{border-radius:16px;padding:12px 16px}
+  #kpis .tile .value{font-size:26px}
+  #kpis .tile:first-child{grid-column:1/-1}
+}
 .tile.t-traffic{background:var(--grp-traffic)} .tile.t-traffic .label{color:var(--gi-traffic)}
 .tile.t-leads{background:var(--grp-leads)}     .tile.t-leads .label{color:var(--gi-leads)}
 .tile.t-sales{background:var(--grp-sales)}     .tile.t-sales .label{color:var(--gi-sales)}
+.tile.t-intro{background:var(--grp-intro)}     .tile.t-intro .label{color:var(--gi-intro)}
+.tile.t-calls{background:var(--grp-calls)}     .tile.t-calls .label{color:var(--gi-calls)}
+@media(max-width:700px){#kpis .tile:first-child{grid-column:1/-1}}
 @media(max-width:640px){.tile{padding:14px 14px}.tile .value{font-size:26px}}
 .kpi-note{font-size:14px;color:var(--ink-2);padding:0 4px 18px}
 /* The weekly-summary card reuses the tile markup — keep it compact. */
@@ -1058,16 +1073,21 @@ button.lead:last-child{border-bottom:0}
 .gl-range button{border:0;background:transparent;box-shadow:none;border-radius:9px;padding:0 14px;font-size:13px;
   color:var(--ink-2);min-height:36px}
 .gl-range button[aria-pressed="true"]{background:var(--surface);color:var(--ink);font-weight:600;box-shadow:var(--shadow-xs)}
-.gl-hero{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:12px}
+.gl-hero{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:12px}
+.gl-hero .gl-tile:first-child{grid-column:1/-1}
 @media(max-width:900px){.gl-hero{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .gl-tile{border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:8px;min-width:0}
-.gl-tile .l{font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase}
+.gl-tile .l{font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.gl-tile .dl{font-style:normal;font-size:11px;letter-spacing:0;text-transform:none;font-weight:600;color:var(--ink-2)}
+.gl-tile .dl.good{color:var(--good)}.gl-tile .dl.bad{color:var(--bad)}
 .gl-tile .v{font-size:32px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
 .gl-tile .d{font-size:12px;color:var(--ink-2)}
 .gl-tile .d.good{color:var(--good);font-weight:500}.gl-tile .d.bad{color:var(--bad);font-weight:500}
 .gl-tile.t-traffic{background:var(--grp-traffic)}.gl-tile.t-traffic .l{color:var(--gi-traffic)}
 .gl-tile.t-leads{background:var(--grp-leads)}.gl-tile.t-leads .l{color:var(--gi-leads)}
 .gl-tile.t-sales{background:var(--grp-sales)}.gl-tile.t-sales .l{color:var(--gi-sales)}
+.gl-tile.t-intro{background:var(--grp-intro)}.gl-tile.t-intro .l{color:var(--gi-intro)}
+.gl-tile.t-calls{background:var(--grp-calls)}.gl-tile.t-calls .l{color:var(--gi-calls)}
 @media(max-width:700px){.gl-tile{padding:14px 16px}.gl-tile .v{font-size:26px}}
 .gl-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:18px 20px;
   box-shadow:0 1px 3px rgba(16,24,40,.05);margin-bottom:12px;min-width:0}
@@ -4470,12 +4490,13 @@ $("#spTo").addEventListener("change",   (e) => { state.spTo   = e.target.value; 
 
 function renderKpis(t, picked = 0, scoped = null) {
   const m = metrics(t);
+  const each = (n, v) => (n ? cur(v) + " each" : "—");
   const tiles = [
-    { label: "Spend", value: cur(t.cost), cls: "t-traffic" },
-    { label: "Leads", value: fmt(t.leads), kind: "leads", cls: "t-leads" },
-    { label: "Cost per lead", value: t.leads ? cur(m.cpl) : "—", cls: "t-leads" },
-    { label: "Revenue", value: cur(t.revenue), cls: "t-sales" },
-    { label: "ROAS", value: m.roas > 0 ? m.roas.toFixed(2) + "x" : "—", cls: "t-sales" },
+    { label: "Spend", value: cur(t.cost), sub: m.roas > 0 ? m.roas.toFixed(2) + "x return" : "No revenue yet", cls: "t-traffic" },
+    { label: "Leads", value: fmt(t.leads), kind: "leads", sub: each(t.leads, m.cpl), cls: "t-leads" },
+    { label: "Intro calls", value: fmt(t.intro_calls), kind: "intro", sub: each(t.intro_calls, m.cpintro), cls: "t-intro" },
+    { label: "Demo calls", value: fmt(t.booked_calls), kind: "calls", sub: each(t.booked_calls, m.cpcall), cls: "t-calls" },
+    { label: "Sales", value: fmt(t.jobs), kind: "closes", sub: each(t.jobs, m.cpjob), cls: "t-sales" },
   ];
   $("#kpis").innerHTML = tiles.map((x) => {
     const open = x.kind && x.value !== "0" && x.value !== "—" && !picked && !scoped;
@@ -4483,6 +4504,7 @@ function renderKpis(t, picked = 0, scoped = null) {
     <div class="card tile ${x.cls}">
       <span class="label">${x.label}</span>
       <span class="value${open ? " people" : ""}"${open ? ` data-p="${x.kind}"` : ""}>${x.value}</span>
+      <span class="sub">${x.sub}</span>
     </div>`;
   }).join("");
   const what = { campaign: "campaigns", adset: "ad sets", ad: "ads" }[level()];
@@ -4544,6 +4566,13 @@ function glanceDelta(now, before, good) {
   const up = ch > 0, ok = good === "neutral" ? null : good === "up" ? up : !up;
   return `<span class="d ${ok === null ? "" : ok ? "good" : "bad"}">${up ? "▲" : "▼"} ${Math.round(Math.abs(ch) * 100)}% vs before</span>`;
 }
+function glanceDeltaShort(now, before, good) {
+  if (!(before > 0) || !(now >= 0)) return "";
+  const ch = (now - before) / before;
+  if (Math.abs(ch) < 0.005) return "";
+  const up = ch > 0, ok = good === "neutral" ? null : good === "up" ? up : !up;
+  return `<em class="dl ${ok === null ? "" : ok ? "good" : "bad"}">${up ? "▲" : "▼"} ${Math.round(Math.abs(ch) * 100)}%</em>`;
+}
 function renderGlance() {
   if (!$("#glanceView")) return;
   const w = windowDates();
@@ -4554,14 +4583,16 @@ function renderGlance() {
   $("#glSub").textContent = when + (pw ? ", compared with the period before" : "");
   [...$("#glRange").children].forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.r === state.range)));
 
+  const each = (n, v) => (n ? cur(v) + " each" : "No " + "data yet");
   const tiles = [
-    { l: "Spend", v: cur(t.cost), d: glanceDelta(t.cost, pt && pt.cost, "neutral"), c: "t-traffic" },
-    { l: "Leads", v: fmt(t.leads), d: glanceDelta(t.leads, pt && pt.leads, "up"), c: "t-leads" },
-    { l: "Cost per lead", v: t.leads ? cur(m.cpl) : "—", d: t.leads && pm ? glanceDelta(m.cpl, pm.cpl, "down") : "", c: "t-leads" },
-    { l: "Revenue", v: cur(t.revenue), d: `<span class="d">${m.roas > 0 ? m.roas.toFixed(2) + "x return on spend" : "No sales yet"}</span>`, c: "t-sales" },
+    { l: "Spend", v: cur(t.cost), dl: glanceDeltaShort(t.cost, pt && pt.cost, "neutral"), d: m.roas > 0 ? m.roas.toFixed(2) + "x return" : "No revenue yet", c: "t-traffic" },
+    { l: "Leads", v: fmt(t.leads), dl: glanceDeltaShort(t.leads, pt && pt.leads, "up"), d: t.leads ? cur(m.cpl) + " each" : "—", c: "t-leads" },
+    { l: "Intro calls", v: fmt(t.intro_calls), dl: glanceDeltaShort(t.intro_calls, pt && pt.intro_calls, "up"), d: t.intro_calls ? cur(m.cpintro) + " each" : "—", c: "t-intro" },
+    { l: "Demo calls", v: fmt(t.booked_calls), dl: glanceDeltaShort(t.booked_calls, pt && pt.booked_calls, "up"), d: t.booked_calls ? cur(m.cpcall) + " each" : "—", c: "t-calls" },
+    { l: "Sales", v: fmt(t.jobs), dl: glanceDeltaShort(t.jobs, pt && pt.jobs, "up"), d: t.jobs ? cur(m.cpjob) + " each" : "—", c: "t-sales" },
   ];
   $("#glHero").innerHTML = tiles.map((x) =>
-    `<div class="gl-tile ${x.c}"><span class="l">${x.l}</span><span class="v">${x.v}</span>${x.d || '<span class="d">&nbsp;</span>'}</div>`).join("");
+    `<div class="gl-tile ${x.c}"><span class="l"><span>${x.l}</span>${x.dl}</span><span class="v">${x.v}</span><span class="d">${x.d}</span></div>`).join("");
 
   const pi = (a, b) => (b > 0 ? Math.round((a / b) * 100) + "%" : "—");
   const steps = [
