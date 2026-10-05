@@ -1236,6 +1236,10 @@ if (localStorage.getItem("santermedia.theme") === "dark") {
       <span class="m-row-t"><b>Alerts</b><small id="mNotifyNote">Get alerts for new leads and booked calls</small></span>
       <span class="m-switch"><i></i></span>
     </button>
+    <button type="button" class="m-row" id="mPushCopy" hidden>
+      <span class="m-ico" style="background:var(--grp-calls);color:var(--gi-calls)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg></span>
+      <span class="m-row-t"><b>Copy instant-alert link</b><small id="mPushNote">For the GitHub alert job (one-off setup)</small></span>
+    </button>
     <button type="button" class="m-row" id="mResync">
       <span class="m-ico" style="background:var(--sunk-2);color:var(--ink-2)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.3-4.6L4 8.5M4 4v4.5h4.5M4 13a8 8 0 0 0 14.3 4.6l1.7-2.1M20 20v-4.5h-4.5"/></svg></span>
       <span class="m-row-t"><b>Re-sync data</b><small id="mSyncNote">Pull the latest from the Google Sheet</small></span>
@@ -4845,18 +4849,33 @@ function postSheetConfig() {
 }
 if ("serviceWorker" in navigator) navigator.serviceWorker.addEventListener("message", (e) => {
   if (e.data && e.data.type === "goto" && e.data.page) setPage(e.data.page);
+  if (e.data && e.data.type === "refresh") { if (!loadingData) boot().catch(() => {}); }   // a push arrived while the app is open: pull the new data
 });
+const VAPID_PUBLIC = "BMC2ZRhHiU6bdbA8i-4bC0JzQhisnJ9A_C8JkuDZ1ouCNzG79oHs9pozhnNpLtompvep81wu0fvC61IAbePoH2w";
+const b64ToBytes = (b) => { const p = "=".repeat((4 - b.length % 4) % 4), r = atob((b + p).replace(/-/g, "+").replace(/_/g, "/")); return Uint8Array.from(r, (c) => c.charCodeAt(0)); };
+let pushSub = null;
+async function ensurePushSub() {
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    if (!reg.pushManager) return null;
+    pushSub = (await reg.pushManager.getSubscription()) || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToBytes(VAPID_PUBLIC) });
+  } catch { pushSub = null; }
+  syncNotifyRow();
+  return pushSub;
+}
 async function enableBackgroundCheck() {
   try {
     const reg = await navigator.serviceWorker.ready;
     if (reg.periodicSync) await reg.periodicSync.register("check-leads", { minInterval: 15 * 60 * 1000 });
     postSheetConfig();
+    ensurePushSub();
     if (reg.active) reg.active.postMessage({ type: "check" });   // take a first look now so later checks have something to compare with
   } catch {}
 }
 function syncNotifyRow() {
   const row = $("#mNotify"); if (!row) return;
   if (!("Notification" in window)) { row.hidden = true; return; }
+  const pc = $("#mPushCopy"); if (pc) pc.hidden = !(Notification.permission === "granted" && pushSub);
   const perm = Notification.permission;
   row.setAttribute("aria-checked", String(perm === "granted"));
   $("#mNotifyNote").textContent = perm === "granted" ? "On: alerts for new leads and booked calls"
@@ -4871,6 +4890,12 @@ $("#mNotify").addEventListener("click", async () => {
     showToast("Alerts are on. Tap the switch in your phone's site settings to turn them off.");
   }
   syncNotifyRow();
+});
+$("#mPushCopy").addEventListener("click", async () => {
+  if (!pushSub) return;
+  const text = JSON.stringify(pushSub.toJSON());
+  try { await navigator.clipboard.writeText(text); showToast("Copied. Paste it into the PUSH_SUBSCRIPTION secret on GitHub."); }
+  catch { window.prompt("Copy this and paste it into the PUSH_SUBSCRIPTION secret on GitHub:", text); }
 });
 if ("Notification" in window && Notification.permission === "granted") enableBackgroundCheck();
 

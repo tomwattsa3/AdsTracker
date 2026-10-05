@@ -1,7 +1,7 @@
 /* Service worker: lets the app install on Android and open without a connection.
    The page itself is network-first (so updates always arrive) with the cached copy
    as the offline fallback. Sheet data is never cached, so numbers are never stale. */
-const CACHE = "ads-tracker-v3";
+const CACHE = "ads-tracker-v4";
 const META = "ads-meta";   // small notes the worker keeps between checks (sheet links, who it has already seen)
 const SHELL = ["./", "index.html", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png", "icon-maskable-512.png"];
 
@@ -109,6 +109,17 @@ self.addEventListener("message", (e) => {
   const d = e.data || {};
   if (d.type === "config") e.waitUntil(putJSON("config", d.urls));
   if (d.type === "check") e.waitUntil(checkSheets());
+});
+self.addEventListener("push", (e) => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch { d = { title: "SanterMedia", body: e.data ? e.data.text() : "" }; }
+  e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((cs) => {
+    const open = cs.filter((c) => c.visibilityState === "visible");
+    if (open.length && d.tag !== "alert-test") { open.forEach((c) => c.postMessage({ type: "refresh" })); return; }   // app is on screen: it shows its own banner
+    return self.registration.showNotification(d.title || "SanterMedia", {
+      body: d.body || "", icon: "icon-192.png", badge: "icon-192.png", tag: d.tag || "alert", renotify: true, data: { page: d.page || "glance" },
+    });
+  }));
 });
 self.addEventListener("notificationclick", (e) => {
   e.notification.close();

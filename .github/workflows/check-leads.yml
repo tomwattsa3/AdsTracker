@@ -1,0 +1,43 @@
+name: Check for new leads
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+    inputs:
+      test:
+        description: "Send a test notification instead of checking the sheet"
+        required: false
+        default: "false"
+
+concurrency:
+  group: check-leads
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Remember who was seen last time
+        uses: actions/cache@v4
+        with:
+          path: .seen
+          key: seen-${{ github.run_id }}
+          restore-keys: seen-
+
+      - name: Install the push library
+        run: npm install --no-save --no-audit --no-fund web-push
+
+      - name: Look for new leads and calls
+        run: node scripts/notify.mjs
+        env:
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          PUSH_SUBSCRIPTION: ${{ secrets.PUSH_SUBSCRIPTION }}
+          TEST: ${{ inputs.test }}
