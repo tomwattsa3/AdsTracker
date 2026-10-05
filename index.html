@@ -985,6 +985,7 @@ td.cell-pos,td.cell-neg{font-weight:500}
 .m-row{display:flex;align-items:center;gap:14px;width:100%;min-height:62px;border:0;border-bottom:1px solid var(--cell);
   background:transparent;border-radius:0;box-shadow:none;padding:0;text-align:left;font:inherit;color:inherit}
 .m-row:last-child{border-bottom:0}
+.m-row[hidden]{display:none}
 .m-ico{flex:none;width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center}
 .m-row-t{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.3}
 .m-row-t b{font-size:15px;font-weight:600}
@@ -1153,6 +1154,14 @@ if (localStorage.getItem("santermedia.theme") === "dark") {
   <div class="m-head"><span class="m-eyebrow">SanterMedia</span><h1 class="page-title">More</h1></div>
   <div class="m-list" id="mMoreList"></div>
   <div class="m-list">
+    <button type="button" class="m-row" id="mInstall" hidden>
+      <span class="m-ico" style="background:var(--grp-leads);color:var(--gi-leads)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19h14"/></svg></span>
+      <span class="m-row-t"><b>Install app</b><small>Add it to your home screen</small></span>
+    </button>
+    <div class="m-row" id="mIosHint" hidden>
+      <span class="m-ico" style="background:var(--grp-leads);color:var(--gi-leads)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7.5 8.5 12 4l4.5 4.5M6 13v6h12v-6"/></svg></span>
+      <span class="m-row-t"><b>Install app</b><small>Tap Share, then Add to Home Screen</small></span>
+    </div>
     <button type="button" class="m-row" id="mResync">
       <span class="m-ico" style="background:var(--sunk-2);color:var(--ink-2)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.3-4.6L4 8.5M4 4v4.5h4.5M4 13a8 8 0 0 0 14.3 4.6l1.7-2.1M20 20v-4.5h-4.5"/></svg></span>
       <span class="m-row-t"><b>Re-sync data</b><small id="mSyncNote">Pull the latest from the Google Sheet</small></span>
@@ -4612,6 +4621,27 @@ $("#glanceView").addEventListener("click", (e) => {
   const b = e.target.closest("[data-go]"); if (b) setPage(b.dataset.go);
 });
 
+/* ═══════════ Installable web app (Android Chrome + iOS home screen) ═══ */
+if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1")) {
+  addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch((err) => console.warn("Service worker:", err)));
+}
+let deferredInstall = null;
+const isStandalone = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+function syncInstallRows() {
+  $("#mInstall").hidden = !deferredInstall || isStandalone();
+  $("#mIosHint").hidden = !(/iphone|ipad|ipod/i.test(navigator.userAgent) && !isStandalone());
+}
+addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferredInstall = e; syncInstallRows(); });
+addEventListener("appinstalled", () => { deferredInstall = null; syncInstallRows(); });
+$("#mInstall").addEventListener("click", async () => {
+  if (!deferredInstall) return;
+  deferredInstall.prompt();
+  await deferredInstall.userChoice;
+  deferredInstall = null;
+  syncInstallRows();
+});
+syncInstallRows();
+
 /* ═══════════ Phone app: tabs, campaigns, leads, more, lead sheet ═══ */
 const dayText = (v) => {
   const iso = normDate(v);
@@ -6300,6 +6330,7 @@ try {
     b.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 })();
 if (state.page !== "glance") setPage(state.page);   // desktop lands on Ads Manager
+{ const pg = new URLSearchParams(location.search).get("page"); if (pg && PAGE_IDS[pg]) setPage(pg); }   // home-screen shortcuts
 boot().catch((e) => console.error(e));
 </script>
 </body>
