@@ -1,7 +1,7 @@
 /* Service worker: lets the app install on Android and open without a connection.
    The page itself is network-first (so updates always arrive) with the cached copy
    as the offline fallback. Sheet data is never cached, so numbers are never stale. */
-const CACHE = "ads-tracker-v1";
+const CACHE = "ads-tracker-v2";
 const SHELL = ["./", "index.html", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png", "icon-maskable-512.png"];
 
 self.addEventListener("install", (e) => {
@@ -23,7 +23,7 @@ self.addEventListener("fetch", (e) => {
 
   if (url.origin === location.origin) {
     e.respondWith(
-      fetch(req)
+      fetch(req, { cache: "no-cache" })   // always revalidate: GitHub Pages sets max-age=600, which would show a stale copy
         .then((res) => {
           if (res.ok) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(req, copy)); }
           return res;

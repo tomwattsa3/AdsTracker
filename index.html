@@ -4675,7 +4675,16 @@ $("#glanceView").addEventListener("click", (e) => {
 
 /* ═══════════ Installable web app (Android Chrome + iOS home screen) ═══ */
 if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1")) {
+  const hadController = !!navigator.serviceWorker.controller;
+  let reloading = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {   // a new version took over: load it now
+    if (!hadController || reloading) return;
+    reloading = true; location.reload();
+  });
   addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch((err) => console.warn("Service worker:", err)));
+  document.addEventListener("visibilitychange", () => {   // coming back to the app: look for a new version
+    if (document.visibilityState === "visible") navigator.serviceWorker.getRegistration().then((r) => r && r.update()).catch(() => {});
+  });
 }
 let deferredInstall = null;
 const isStandalone = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
