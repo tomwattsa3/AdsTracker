@@ -925,6 +925,37 @@ td.cell-pos,td.cell-neg{font-weight:500}
 .lb-stat b{font-weight:600}
 .pos,.neg{font-weight:500}
 
+/* ── Motion: pages slide, lists settle in, skeletons shimmer ──── */
+@keyframes slideFromRight{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:none}}
+@keyframes slideFromLeft{from{opacity:0;transform:translateX(-26px)}to{opacity:1;transform:none}}
+@keyframes settleUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.slide-r{animation:slideFromRight .3s var(--ease)}
+.slide-l{animation:slideFromLeft .3s var(--ease)}
+@media(max-width:700px){
+  .gl-tile,.gl-card,.m-card,.m-group,.m-set,.m-tile{animation:settleUp .34s var(--ease) backwards}
+  .gl-tile:nth-child(2),.m-card:nth-of-type(2),.m-group:nth-of-type(2){animation-delay:.04s}
+  .gl-tile:nth-child(3),.m-card:nth-of-type(3),.m-group:nth-of-type(3){animation-delay:.08s}
+  .gl-tile:nth-child(4),.m-card:nth-of-type(4),.m-group:nth-of-type(4){animation-delay:.12s}
+  .gl-tile:nth-child(5),.m-card:nth-of-type(5),.m-group:nth-of-type(5){animation-delay:.16s}
+  .mnav button:active{transform:scale(.9)}
+  .m-card:active,.m-lead:active,.m-row:active,button.lead:active{transform:scale(.985)}
+}
+.mnav button svg{transition:transform .22s var(--ease)}
+.mnav button[aria-current="true"] svg{transform:translateY(-2px) scale(1.1)}
+/* Home range pill: the white pill glides between options */
+.gl-range{position:relative}
+.gl-range button{position:relative;z-index:1}
+.gl-range button[aria-pressed="true"]{background:transparent;box-shadow:none}
+.gl-range .seg-indicator{top:3px;bottom:3px;border-radius:9px;box-shadow:var(--shadow-xs);transition:transform .3s var(--ease),width .3s var(--ease)}
+/* Loading placeholders in the shape of the real thing */
+.skel-tile{gap:6px;background:var(--surface)}
+.skel-dot{flex:none;width:38px;height:38px;border-radius:50%;
+  background:linear-gradient(90deg,var(--sunk) 25%,var(--sunk-2) 50%,var(--sunk) 75%);background-size:300% 100%;animation:skelShimmer 1.3s linear infinite}
+.skel-fill{display:block;border-radius:6px;
+  background:linear-gradient(90deg,var(--sunk-2) 25%,var(--axis) 50%,var(--sunk-2) 75%);background-size:300% 100%;animation:skelShimmer 1.3s linear infinite}
+.skel-card{pointer-events:none}
+.gl-bar .skel-fill{width:100%;border-radius:5px 5px 0 0}
+
 /* ── Phone app ─────────────────────────────────────────────── */
 @media(min-width:701px){ #mCampView,#mLeadsView,#mMoreView,.mnav,#leadSheet,#sheetScrim{display:none !important} }
 @media(max-width:700px){
@@ -1043,10 +1074,14 @@ td.cell-pos,td.cell-neg{font-weight:500}
 .sh-step:last-child .sh-dot u{background:transparent}
 .sh-step.done .sh-dot i{background:var(--accent);border-color:#bfdbfe}
 .sh-step.done .sh-dot u{background:#bfdbfe}
-.sh-st{display:flex;flex-direction:column;gap:1px;padding-bottom:10px;margin-top:-3px}
+.sh-st{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;padding-bottom:10px;margin-top:-3px}
+.sh-side{flex:none;max-width:52%;margin-top:-1px;text-align:right;font-size:11px;line-height:1.3;color:var(--muted);
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .sh-st b{font-size:14px;font-weight:600;color:var(--muted)}
 .sh-step.done .sh-st b{color:var(--ink)}
 .sh-st small{font-size:12px;color:var(--muted)}
+/* Tappable rows: no double-tap delay, no grey flash */
+.lead,.m-lead,.m-card,.m-row,.mnav button,.m-chips button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 /* glance rows are buttons now */
 button.lead{width:100%;background:transparent;border-width:0 0 1px;border-radius:0;box-shadow:none;padding:10px 0;text-align:left;font:inherit;color:inherit}
 button.lead:last-child{border-bottom:0}
@@ -1210,6 +1245,7 @@ if (localStorage.getItem("santermedia.theme") === "dark") {
       <span class="gl-sub" id="glSub"></span>
     </div>
     <div class="gl-range" id="glRange" role="group" aria-label="Date range">
+      <span class="seg-indicator"></span>
       <button data-r="today" aria-pressed="false">Today</button>
       <button data-r="7" aria-pressed="false">7 days</button>
       <button data-r="30" aria-pressed="false">30 days</button>
@@ -2026,19 +2062,31 @@ function showSkeleton() {
   $("#thead").innerHTML = `<tr class="cols"><th class="skel-th"><span class="skel-line" style="width:120px"></span></th></tr>`;
   $("#tbody").innerHTML = Array.from({ length: 6 }, () => `
     <tr class="skel-row"><td colspan="20"><span class="skel-line" style="width:${30 + Math.random() * 50 | 0}%"></span></td></tr>`).join("");
+  // phone Home: placeholders in the same shapes as the real thing
+  const line = (w, c = "") => `<span class="skel-line ${c}" style="width:${w}"></span>`;
+  $("#glHero").innerHTML = Array.from({ length: 5 }, () => `<div class="gl-tile skel-tile">${line("60%")}${line("75%", "lg")}${line("85%")}</div>`).join("");
+  $("#glLeads").innerHTML = Array.from({ length: 4 }, () => `<div class="lead"><span class="skel-dot"></span><div style="flex:1">${line("45%")}${line("70%")}</div></div>`).join("");
+  $("#glFunnel").innerHTML = Array.from({ length: 4 }, () => `<div class="fn">${line("70%")}<div class="fn-track"><i class="skel-fill" style="width:${30 + Math.random() * 60 | 0}%"></i></div>${line("60%")}</div>`).join("");
+  $("#glBars").innerHTML = `<div class="gl-bars">${[40, 65, 50, 80, 55, 90, 30].map((h) => `<div class="gl-bar"><i class="skel-fill" style="height:${h}%"></i></div>`).join("")}</div>`;
+  $("#glCamps").innerHTML = Array.from({ length: 3 }, () => `<div class="cp">${line("60%")}${line("100%")}${line("45%")}</div>`).join("");
 }
+const mSkelCards = (n) => Array.from({ length: n }, () => `<div class="m-card skel-card"><span class="skel-line" style="width:55%"></span><span class="skel-line" style="width:100%"></span><span class="skel-line" style="width:80%"></span></div>`).join("");
 
 /** Sliding page transition — the outgoing view is swapped for hidden
     instantly (as before, so any layout math a page's render() does still
     sees real dimensions), the incoming one fades/slides up on top of it. */
 const PAGE_IDS = { mcamp: "mCampView", mleads: "mLeadsView", mmore: "mMoreView", glance: "glanceView", ads: "adsView", dashboard: "dashboardView", leads: "leadsView", analytics: "analyticsView",
   sales: "salesView", survey: "surveyView", customers: "customersView", daily: "dailyView" };
-function animatePageIn(el) {
+const TAB_ORDER = ["glance", "mcamp", "mleads", "mmore"];
+const tabIdx = (pg) => { const i = TAB_ORDER.indexOf(pg); return i < 0 ? TAB_ORDER.length : i; };
+const slideCls = ["view-in", "slide-r", "slide-l"];
+/** dir: +1 slides in from the right (going forward), -1 from the left (going back), 0 plain fade-up. */
+function animatePageIn(el, dir = 0) {
   if (!el) return;
-  el.classList.remove("view-in");
+  el.classList.remove(...slideCls);
   void el.offsetWidth; // restart the animation even if the same page is re-entered
-  el.classList.add("view-in");
-  el.addEventListener("animationend", () => el.classList.remove("view-in"), { once: true });
+  el.classList.add(dir > 0 ? "slide-r" : dir < 0 ? "slide-l" : "view-in");
+  el.addEventListener("animationend", () => el.classList.remove(...slideCls), { once: true });
 }
 
 /** Staggers a fade/slide-in across a freshly-rebuilt tbody's rows. Delay is
@@ -2834,6 +2882,7 @@ function ingest(text, ref) {
 }
 let lastIngest = null;
 let loadError = null;
+let loadingData = true;   // true until the first load finishes: phone views show skeletons
 
 /* Purchases ride the row their lead created, same as booked calls. */
 function mergePurchases(rows, aggs) {
@@ -4595,13 +4644,15 @@ function glanceDeltaShort(now, before, good) {
 }
 function renderGlance() {
   if (!$("#glanceView")) return;
+  if (loadingData && !state.rows.length) return;   // the skeleton placeholders stay until data lands
   const w = windowDates();
   const t = glanceTotals(w.from, w.to), m = metrics(t);
   const pw = prevWindow(w);
   const pt = pw ? glanceTotals(pw.from, pw.to) : null, pm = pt ? metrics(pt) : null;
   const when = { all: "All time", today: "Today", yesterday: "Yesterday", lastweek: "Last week", mtd: "This month", custom: "Custom range" }[state.range] || `Last ${state.range} days`;
   $("#glSub").textContent = when + (pw ? ", compared with the period before" : "");
-  [...$("#glRange").children].forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.r === state.range)));
+  [...$("#glRange").querySelectorAll("button")].forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.r === state.range)));
+  placeGlRange();
 
   const km = (n) => state.currency + (n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, "") + "k" : Math.round(n));
   const per = (n, v, unit) => (n ? km(v) + "/" + unit : "—");
@@ -4642,13 +4693,13 @@ function renderGlance() {
     .sort((a, b) => (b.p.date || "").localeCompare(a.p.date || "") || b.i - a.i).slice(0, 8).map((x) => x.p);
   const tints = [["#e3f5ec", "#166534"], ["#eeeafc", "#5b21b6"], ["#fdeceb", "#b42318"], ["#e0f6f8", "#0e7490"], ["#fff1d1", "#92400e"]];
   const status = (p) => p.purchased ? ["Purchased", "#fff1d1", "#92400e"] : p.booked ? ["Demo call", "#e0f6f8", "#0e7490"]
-    : p.introCalled ? ["Intro call", "#fdeceb", "#b42318"] : ["New", "#eef0f3", "#4b5563"];
+    : p.introCalled ? ["Intro call", "#fdeceb", "#b42318"] : ["Lead", "#eef0f3", "#4b5563"];
   $("#glLeads").innerHTML = recent.length ? recent.map((p) => {
     const nm = (p.name || p.email || "?").trim(), init = nm.split(/\s+/).slice(0, 2).map((x) => x[0]).join("").toUpperCase();
     const tint = tints[[...nm].reduce((a, c) => a + c.charCodeAt(0), 0) % tints.length], st = status(p);
     const when = p.date === today ? "Today" : p.date === yest ? "Yesterday"
       : dateFromYMD(p.date).toLocaleDateString(undefined, { day: "numeric", month: "short" });
-    return `<button type="button" class="lead" data-lead="${allLeads.indexOf(p)}"><span class="av" style="background:${tint[0]};color:${tint[1]}">${esc(init)}</span>
+    return `<button type="button" class="lead" data-lead="${esc(leadKey(p))}"><span class="av" style="background:${tint[0]};color:${tint[1]}">${esc(init)}</span>
       <div class="lead-main"><b>${esc(nm)}</b><small>${esc(leadCampaign(p))}</small></div>
       <div class="lead-side"><span class="chip" style="background:${st[1]};color:${st[2]}">${st[0]}</span><small>${when}</small></div></button>`;
   }).join("") : '<div class="empty" style="padding:24px 0">No leads yet.</div>';
@@ -4662,12 +4713,32 @@ function renderGlance() {
       <div class="cp-stats"><span>${fmt(c.leads)} leads</span><span>${c.leads ? cur(cm.cpl) + " each" : "no leads yet"}</span></div></div>`;
   }).join("") : '<div class="empty" style="padding:24px 0">No campaigns in this range.</div>';
 }
+const GL_ORDER = ["today", "7", "30", "all"];
+function placeGlRange() {   // slide the selected-pill indicator under the active button
+  const seg = $("#glRange"), on = seg && seg.querySelector('button[aria-pressed="true"]'), ind = seg && seg.querySelector(".seg-indicator");
+  if (!on || !ind || !on.offsetWidth) return;
+  ind.style.width = on.offsetWidth + "px";
+  ind.style.transform = `translateX(${on.offsetLeft}px)`;
+}
+addEventListener("resize", placeGlRange);
 $("#glRange").addEventListener("click", (e) => {
-  const b = e.target.closest("button[data-r]"); if (!b) return;
+  const b = e.target.closest("button[data-r]"); if (!b || b.dataset.r === state.range) return;
+  const dir = GL_ORDER.indexOf(b.dataset.r) > GL_ORDER.indexOf(state.range) ? 1 : -1;
   state.range = b.dataset.r;
   $("#fRange").value = state.range;
   $("#customWrap").hidden = true;
-  render();
+  [...$("#glRange").querySelectorAll("button")].forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+  placeGlRange();                                   // the pill glides straight away
+  const blocks = [...$("#glanceView").querySelectorAll(".gl-hero, .gl-card")];
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) { render(); return; }
+  blocks.forEach((el) => { el.style.transition = "opacity 110ms ease, transform 110ms ease"; el.style.opacity = "0"; el.style.transform = `translateX(${-16 * dir}px)`; });
+  setTimeout(() => {                                // a beat later: new numbers arrive from the other side
+    render();
+    blocks.forEach((el) => { el.style.transition = "none"; el.style.transform = `translateX(${16 * dir}px)`; });
+    void $("#glanceView").offsetWidth;
+    blocks.forEach((el) => { el.style.transition = "opacity 240ms ease, transform 300ms cubic-bezier(.16,1,.3,1)"; el.style.opacity = "1"; el.style.transform = ""; });
+    setTimeout(() => blocks.forEach((el) => { el.style.transition = ""; el.style.opacity = ""; el.style.transform = ""; }), 340);
+  }, 120);
 });
 $("#glanceView").addEventListener("click", (e) => {
   const b = e.target.closest("[data-go]"); if (b) setPage(b.dataset.go);
@@ -4710,7 +4781,7 @@ const dayText = (v) => {
 };
 const leadStatus = (p) => p.purchased ? { t: "Purchased", bg: "#fff1d1", ink: "#92400e" }
   : p.booked ? { t: "Demo call", bg: "#e0f6f8", ink: "#0e7490" }
-  : p.introCalled ? { t: "Intro call", bg: "#fdeceb", ink: "#b42318" } : { t: "New", bg: "#eef0f3", ink: "#4b5563" };
+  : p.introCalled ? { t: "Intro call", bg: "#fdeceb", ink: "#b42318" } : { t: "Lead", bg: "#eef0f3", ink: "#4b5563" };
 const AV_TINTS = [["#e3f5ec", "#166534"], ["#eeeafc", "#5b21b6"], ["#fdeceb", "#b42318"], ["#e0f6f8", "#0e7490"], ["#fff1d1", "#92400e"]];
 const avTint = (nm) => AV_TINTS[[...nm].reduce((a, c) => a + c.charCodeAt(0), 0) % AV_TINTS.length];
 const initialsOf = (nm) => nm.trim().split(/\s+/).slice(0, 2).map((x) => x[0]).join("").toUpperCase();
@@ -4721,6 +4792,8 @@ function dayHead(iso) {
   if (iso === isoStep(t, -1)) return "Yesterday";
   return dateFromYMD(iso).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
 }
+const leadKey = (p) => String(p.email || p.name || "").toLowerCase() + "|" + (p.date || "");
+const leadByKey = (k) => allLeads.find((p) => leadKey(p) === k);
 const sortedLeads = () => allLeads.map((p, i) => ({ p, i }))
   .sort((a, b) => (b.p.date || "").localeCompare(a.p.date || "") || b.i - a.i).map((x) => x.p);
 
@@ -4728,8 +4801,9 @@ const sortedLeads = () => allLeads.map((p, i) => ({ p, i }))
 function leadSheetHTML(p) {
   const nm = p.name || p.email || "Unknown", av = avTint(nm), st = leadStatus(p);
   const row = (k, v) => v ? `<div class="sh-row"><span>${k}</span><b>${esc(v)}</b></div>` : "";
-  const step = (label, when, done) =>
-    `<div class="sh-step${done ? " done" : ""}"><div class="sh-dot"><i></i><u></u></div><div class="sh-st"><b>${label}</b><small>${esc(when)}</small></div></div>`;
+  const step = (label, when, done, side = "") =>
+    `<div class="sh-step${done ? " done" : ""}"><div class="sh-dot"><i></i><u></u></div><div class="sh-st"><b>${label}</b><small>${esc(when)}</small></div>${side ? `<span class="sh-side">${esc(side)}</span>` : ""}</div>`;
+  const adSide = leadAd(p) !== "—" ? leadAd(p) : (!p.tracked && leadCampaign(p) !== "—" ? leadCampaign(p) : "");
   return `<div class="sh-head">
       <span class="av lg" style="background:${av[0]};color:${av[1]}">${esc(initialsOf(nm))}</span>
       <div class="sh-who"><b>${esc(nm)}</b><span class="chip" style="background:${st.bg};color:${st.ink}">${st.t}</span></div>
@@ -4741,7 +4815,7 @@ function leadSheetHTML(p) {
     </div>
     <h3 class="sh-h">Progress</h3>
     <div class="sh-steps">
-      ${step("Opted in", dayText(p.date) || "Unknown", true)}
+      ${step("Opted in", dayText(p.date) || "Unknown", true, adSide)}
       ${step("Intro call", p.introCalled ? (dayText(p.introCallDate) || "Booked") : "Not yet", p.introCalled)}
       ${step("Demo call", p.booked ? (dayText(p.bookedDate) || "Booked") : "Not yet", p.booked)}
       ${step("Purchase", p.purchased ? `${cur(p.purchaseAmount)}${dayText(p.purchaseDate) ? " on " + dayText(p.purchaseDate) : ""}` : "Not yet", p.purchased)}
@@ -4772,8 +4846,23 @@ $("#leadSheet").addEventListener("click", (e) => { if (e.target.closest("[data-s
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeLeadSheet(); });
 document.addEventListener("click", (e) => {
   const b = e.target.closest("[data-lead]"); if (!b) return;
-  openLeadSheet(allLeads[+b.dataset.lead]);
+  openLeadSheet(leadByKey(b.dataset.lead));
 });
+/* Backstop for taps the browser turns into a scroll or drops: a quick, nearly stationary touch on a
+   lead row opens it even if no click follows. */
+(() => {
+  let s = null;
+  document.addEventListener("touchstart", (e) => {
+    const b = e.target.closest && e.target.closest("[data-lead]");
+    s = b ? { b, x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now() } : null;
+  }, { passive: true });
+  document.addEventListener("touchend", (e) => {
+    const st = s; s = null; if (!st) return;
+    const t = e.changedTouches[0];
+    if (Math.hypot(t.clientX - st.x, t.clientY - st.y) > 12 || Date.now() - st.t > 600) return;
+    setTimeout(() => { if (!$("#leadSheet").classList.contains("on")) openLeadSheet(leadByKey(st.b.dataset.lead)); }, 350);
+  }, { passive: true });
+})();
 /* drag the handle (or header) down to dismiss */
 (() => {
   const sh = $("#leadSheet"); let y0 = null, dy = 0;
@@ -4806,6 +4895,10 @@ let mCampSel = null;
 const mTile = (label, value, cls) => `<div class="m-tile ${cls}"><span>${label}</span><b>${value}</b></div>`;
 function renderMCamp() {
   const el = $("#mCampView"); if (!el) return;
+  if (loadingData && !state.rows.length) {
+    el.innerHTML = `<div class="m-head"><span class="m-eyebrow">Loading</span><h1 class="page-title">Campaigns</h1></div>${mSkelCards(3)}`;
+    return;
+  }
   const rows = filtered(), w = windowDates();
   const eyebrow = capFirst(rangeLabel(state.range, w));
   if (!mCampSel) {
@@ -4845,14 +4938,18 @@ function renderMCamp() {
 }
 $("#mCampView").addEventListener("click", (e) => {
   const c = e.target.closest("[data-camp]");
-  if (c) { mCampSel = c.dataset.camp; renderMCamp(); window.scrollTo(0, 0); return; }
-  if (e.target.closest("[data-camp-back]")) { mCampSel = null; renderMCamp(); window.scrollTo(0, 0); }
+  if (c) { mCampSel = c.dataset.camp; renderMCamp(); animatePageIn($("#mCampView"), 1); window.scrollTo(0, 0); return; }
+  if (e.target.closest("[data-camp-back]")) { mCampSel = null; renderMCamp(); animatePageIn($("#mCampView"), -1); window.scrollTo(0, 0); }
 });
 
 /* — Leads: searchable list, newest first — */
 const mLead = { f: "all", q: "", shown: 40 };
 function renderMLeads() {
   const list = $("#mLeadList"); if (!list) return;
+  if (loadingData && !allLeads.length) {
+    list.innerHTML = `<div class="m-group">${Array.from({ length: 7 }, () => `<div class="m-lead"><span class="skel-dot"></span><span class="m-lead-t"><span class="skel-line" style="width:50%"></span><span class="skel-line" style="width:75%"></span></span></div>`).join("")}</div>`;
+    return;
+  }
   const all = sortedLeads(), q = mLead.q.trim().toLowerCase();
   const keep = (p) => (mLead.f === "all" || (mLead.f === "intro" && p.introCalled) || (mLead.f === "booked" && p.booked) || (mLead.f === "purchased" && p.purchased))
     && (!q || (p.name || "").toLowerCase().includes(q) || (p.email || "").toLowerCase().includes(q));
@@ -4869,7 +4966,7 @@ function renderMLeads() {
       html += `<div class="m-glabel">${d ? dayHead(d) : "No date"}</div><div class="m-group">`; open = true; cur_ = d;
     }
     const nm = p.name || p.email || "?", av = avTint(nm), st = leadStatus(p);
-    html += `<button type="button" class="m-lead" data-lead="${allLeads.indexOf(p)}"><span class="av" style="background:${av[0]};color:${av[1]}">${esc(initialsOf(nm))}</span>
+    html += `<button type="button" class="m-lead" data-lead="${esc(leadKey(p))}"><span class="av" style="background:${av[0]};color:${av[1]}">${esc(initialsOf(nm))}</span>
       <span class="m-lead-t"><b>${esc(nm)}</b><small>${esc(leadCampaign(p))}</small></span><span class="chip" style="background:${st.bg};color:${st.ink}">${st.t}</span></button>`;
   });
   if (open) html += "</div>";
@@ -6233,6 +6330,7 @@ function closeDrawer() {
     if (!pulling) return;
     dy = e.touches[0].clientY - startY;
     if (dy <= 0) { el.classList.remove("visible"); return; }
+    if (dy < 14) return;   // a tap with a little finger wobble is not a pull
     if (blockedByInnerScroll(e.target)) { pulling = false; el.classList.remove("visible"); return; }
     e.preventDefault();
     const pull = Math.min(dy * 0.5, MAX);
@@ -6302,8 +6400,10 @@ function setPage(page) {
   if (page === "customers") renderCustomersPage();
   if (page === "daily") renderDailyPage();
   document.querySelectorAll(".seg").forEach(updateSegIndicator);
+  if (page === "glance") placeGlRange();
   if (prevPage !== page) {
-    animatePageIn($("#" + PAGE_IDS[page]));
+    const phone = matchMedia("(max-width:700px)").matches;
+    animatePageIn($("#" + PAGE_IDS[page]), phone ? Math.sign(tabIdx(page) - tabIdx(prevPage)) : 0);
     window.scrollTo({ top: pageScroll[page] || 0 });
   }
   closeDrawer();
@@ -6341,6 +6441,7 @@ $("#btnTheme").addEventListener("click", () => {
 
 /* ═══════════ Boot ═════════════════════════════════════════════ */
 async function boot() {
+  loadingData = true;
   $("#btnReload").textContent = "Loading…";
   if (!$("#kpis").children.length) showSkeleton();
   try {
@@ -6360,12 +6461,14 @@ async function boot() {
     console.error(err);
     state.rows = [];
     loadError = err.message;
+    loadingData = false;
     $("#btnReload").textContent = "Re-sync";
     $("#acct").textContent = "Load failed";
     render();
     throw err;                       // the dialog reports it too
   }
   loadError = null;
+  loadingData = false;
   $("#btnReload").textContent = "Re-sync";
   render();
 }
