@@ -986,6 +986,17 @@ td.cell-pos,td.cell-neg{font-weight:500}
 .m-tile.t-leads{background:var(--grp-leads)}.m-tile.t-leads span{color:var(--gi-leads)}
 .m-tile.t-calls{background:var(--grp-calls)}.m-tile.t-calls span{color:var(--gi-calls)}
 .m-tile.t-intro{background:var(--grp-intro)}.m-tile.t-intro span{color:var(--gi-intro)}
+.gl-range#mcRange{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));width:100%;margin-bottom:14px}
+#mcRange button{padding:0}
+.m-tile.p{padding:9px 9px 8px;gap:3px}
+.m-tile.p b{font-size:17px}
+.m-tile.p small{font-size:10px;color:var(--ink-2);white-space:nowrap;font-variant-numeric:tabular-nums}
+.m-stats.four small{font-size:10.5px;color:var(--muted);white-space:nowrap}
+.m-stats.four b.zero{color:var(--muted);font-weight:500}
+.m-ad .m-ad-s{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.m-ad .m-ad-s>div{display:flex;flex-direction:column;gap:1px;min-width:0}
+.m-ad .m-ad-s>div span{font-size:10.5px;color:var(--muted);white-space:nowrap}
+.m-ad .m-ad-s>div b{font-size:13px}
 .m-sort{font-size:12.5px;color:var(--muted);margin:0 4px 8px}
 .m-card{display:flex;flex-direction:column;gap:12px;width:100%;text-align:left;background:var(--surface);
   border:1px solid var(--border);border-radius:20px;padding:16px;margin-bottom:10px;box-shadow:none;font:inherit;color:inherit}
@@ -1243,7 +1254,17 @@ if (localStorage.getItem("santermedia.theme") === "dark") {
     <button id="btnSource" class="ghost">Data source</button>
   </header>
 
-<div id="mCampView" hidden></div>
+<div id="mCampView" hidden>
+  <div id="mCampTop"></div>
+  <div class="gl-range" id="mcRange" role="group" aria-label="Date range">
+    <span class="seg-indicator"></span>
+    <button data-r="today" aria-pressed="false">Today</button>
+    <button data-r="7" aria-pressed="false">7 days</button>
+    <button data-r="30" aria-pressed="false">30 days</button>
+    <button data-r="all" aria-pressed="true">All time</button>
+  </div>
+  <div id="mCampBody"></div>
+</div>
 
 <div id="mLeadsView" hidden>
   <div class="m-head"><span class="m-eyebrow" id="mLeadEyebrow">All time</span><h1 class="page-title">Leads</h1></div>
@@ -4768,11 +4789,13 @@ function renderGlance() {
   }).join("") : '<div class="empty" style="padding:24px 0">No campaigns in this range.</div>';
 }
 const GL_ORDER = ["today", "7", "30", "all"];
-function placeGlRange() {   // slide the selected-pill indicator under the active button
-  const seg = $("#glRange"), on = seg && seg.querySelector('button[aria-pressed="true"]'), ind = seg && seg.querySelector(".seg-indicator");
-  if (!on || !ind || !on.offsetWidth) return;
-  ind.style.width = on.offsetWidth + "px";
-  ind.style.transform = `translateX(${on.offsetLeft}px)`;
+function placeGlRange() {   // slide the selected-pill indicator under the active button, on every date-pill group
+  document.querySelectorAll(".gl-range").forEach((seg) => {
+    const on = seg.querySelector('button[aria-pressed="true"]'), ind = seg.querySelector(".seg-indicator");
+    if (!on || !ind || !on.offsetWidth) return;
+    ind.style.width = on.offsetWidth + "px";
+    ind.style.transform = `translateX(${on.offsetLeft}px)`;
+  });
 }
 addEventListener("resize", placeGlRange);
 $("#glRange").addEventListener("click", (e) => {
@@ -5083,10 +5106,19 @@ $(".mnav").addEventListener("click", (e) => {
 /* — Campaigns: tap a campaign to see only its ad sets and ads — */
 let mCampSel = null;
 const mTile = (label, value, cls) => `<div class="m-tile ${cls}"><span>${label}</span><b>${value}</b></div>`;
+const mKm = (n) => state.currency + (n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, "") + "k" : Math.round(n));
+const mPer = (cost, n, unit) => (n ? mKm(cost / n) + "/" + unit : "—/" + unit);
+const mTileP = (label, value, sub, cls) => `<div class="m-tile p ${cls}"><span>${label}</span><b>${value}</b><small>${sub || "&nbsp;"}</small></div>`;
+const mStrip = (t) => `<div class="m-tiles" style="--n:4;gap:6px">${mTileP("Spend", t.cost >= 10000 ? mKm(t.cost) : cur(t.cost), "", "t-traffic")}${mTileP("Leads", fmt(t.leads), mPer(t.cost, t.leads, "lead"), "t-leads")}${mTileP("Intros", fmt(t.intro_calls), mPer(t.cost, t.intro_calls, "intro"), "t-intro")}${mTileP("Demos", fmt(t.booked_calls), mPer(t.cost, t.booked_calls, "demo"), "t-calls")}</div>`;
+const mCols = (c) => `<div class="m-stats four"><div><span>Spend</span><b>${cur(c.cost)}</b><small>&nbsp;</small></div><div><span>Leads</span><b>${fmt(c.leads)}</b><small>${mPer(c.cost, c.leads, "lead")}</small></div><div><span>Intros</span><b>${fmt(c.intro_calls)}</b><small>${mPer(c.cost, c.intro_calls, "intro")}</small></div><div><span>Demos</span><b${c.booked_calls ? "" : ' class="zero"'}>${fmt(c.booked_calls)}</b><small>${mPer(c.cost, c.booked_calls, "demo")}</small></div></div>`;
 function renderMCamp() {
   const el = $("#mCampView"); if (!el) return;
+  const top = $("#mCampTop"), body = $("#mCampBody");
+  [...$("#mcRange").querySelectorAll("button")].forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.r === state.range)));
+  placeGlRange();
   if (loadingData && !state.rows.length) {
-    el.innerHTML = `<div class="m-head"><span class="m-eyebrow">Loading</span><h1 class="page-title">Campaigns</h1></div>${mSkelCards(3)}`;
+    top.innerHTML = `<div class="m-head"><span class="m-eyebrow">Loading</span><h1 class="page-title">Campaigns</h1></div>`;
+    body.innerHTML = mSkelCards(3);
     return;
   }
   const rows = filtered(), w = windowDates();
@@ -5094,38 +5126,58 @@ function renderMCamp() {
   if (!mCampSel) {
     const camps = groupBy(rows, "campaign").map((c) => ({ c, last: c.src.reduce((m, r) => (r.date > m ? r.date : m), "") }))
       .sort((a, b) => b.last.localeCompare(a.last) || b.c.cost - a.c.cost);
-    const t = glanceTotals(w.from, w.to), tm = metrics(t), linked = sum(rows), maxC = Math.max(1, ...camps.map((x) => x.c.cost));
+    const t = glanceTotals(w.from, w.to), linked = sum(rows), maxC = Math.max(1, ...camps.map((x) => x.c.cost));
     const newCut = isoStep(ymdLocal(new Date()), -7);
-    el.innerHTML = `<div class="m-head"><span class="m-eyebrow">${eyebrow}</span><h1 class="page-title">Campaigns</h1></div>
-      <div class="m-tiles" style="--n:3">${mTile("Spend", cur(t.cost), "t-traffic")}${mTile("Leads", fmt(t.leads), "t-leads")}${mTile("Per lead", t.leads ? cur(tm.cpl) : "—", "t-leads")}</div>
+    top.innerHTML = `<div class="m-head"><span class="m-eyebrow">${eyebrow}</span><h1 class="page-title">Campaigns</h1></div>`;
+    body.innerHTML = `${mStrip(t)}
       <div class="m-sort">Newest first</div>
       ${camps.length ? camps.map(({ c, last }) => {
-        const cm = metrics(c), fresh = c.src.every((r) => r.date >= newCut) && last >= newCut;
+        const fresh = c.src.every((r) => r.date >= newCut) && last >= newCut;
         return `<button type="button" class="m-card" data-camp="${esc(c.id)}">
           <div class="m-card-top"><b>${esc(c.name)}</b>${fresh ? '<span class="m-badge">New</span>' : ""}${'<svg width="16" height="16" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4.5 2.5 8 6l-3.5 3.5"/></svg>'}</div>
           <div class="m-bar"><i style="width:${Math.max(2, (c.cost / maxC) * 100)}%"></i></div>
-          <div class="m-stats"><div><span>Spend</span><b>${cur(c.cost)}</b></div><div><span>Leads</span><b>${fmt(c.leads)}</b></div><div><span>Per lead</span><b>${c.leads ? cur(cm.cpl) : "No leads"}</b></div></div></button>`;
+          ${mCols(c)}</button>`;
       }).join("") : '<div class="empty">No campaigns in this range.</div>'}
       ${t.leads > linked.leads ? `<div class="m-more" style="margin:4px 4px 0">${fmt(t.leads - linked.leads)} more leads came from sources that aren't tied to an ad.</div>` : ""}`;
     return;
   }
   const camp = groupBy(rows, "campaign").find((c) => c.id === mCampSel);
   if (!camp) { mCampSel = null; renderMCamp(); return; }
-  const sets = groupBy(camp.src, "adset").sort((a, b) => b.cost - a.cost), cmx = metrics(camp);
+  const sets = groupBy(camp.src, "adset").sort((a, b) => b.cost - a.cost);
   const adCount = groupBy(camp.src, "ad").length;
-  el.innerHTML = `<button type="button" class="m-back" data-camp-back><svg width="18" height="18" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" style="transform:rotate(180deg)"><path d="M4.5 2.5 8 6l-3.5 3.5"/></svg>Campaigns</button>
-    <div class="m-head"><h1 class="page-title" style="font-size:20px;line-height:1.25">${esc(camp.name)}</h1><span class="m-eyebrow">${sets.length} ad set${sets.length === 1 ? "" : "s"}, ${adCount} ad${adCount === 1 ? "" : "s"} · ${eyebrow.toLowerCase()}</span></div>
-    <div class="m-tiles" style="--n:4">${mTile("Spend", cur(camp.cost), "t-traffic")}${mTile("Leads", fmt(camp.leads), "t-leads")}${mTile("Per lead", camp.leads ? cur(cmx.cpl) : "—", "t-leads")}${mTile("Intros", fmt(camp.intro_calls), "t-intro")}</div>
+  top.innerHTML = `<button type="button" class="m-back" data-camp-back><svg width="18" height="18" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" style="transform:rotate(180deg)"><path d="M4.5 2.5 8 6l-3.5 3.5"/></svg>Campaigns</button>
+    <div class="m-head"><h1 class="page-title" style="font-size:20px;line-height:1.25">${esc(camp.name)}</h1><span class="m-eyebrow">${sets.length} ad set${sets.length === 1 ? "" : "s"}, ${adCount} ad${adCount === 1 ? "" : "s"} · ${eyebrow.toLowerCase()}</span></div>`;
+  body.innerHTML = `${mStrip(camp)}
     ${sets.map((s) => {
-      const ads = groupBy(s.src, "ad").sort((a, b) => b.cost - a.cost), top = ads.slice(0, 5), mx = Math.max(1, ...top.map((a) => a.cost));
+      const ads = groupBy(s.src, "ad").sort((a, b) => b.cost - a.cost), top5 = ads.slice(0, 5), mx = Math.max(1, ...top5.map((a) => a.cost));
       return `<section class="m-set"><span class="m-eyebrow up">Ad set</span><b class="m-set-n">${esc(s.name)}</b>
-        <div class="m-stats four"><div><span>Spend</span><b>${cur(s.cost)}</b></div><div><span>Leads</span><b>${fmt(s.leads)}</b></div><div><span>Intro calls</span><b>${fmt(s.intro_calls)}</b></div><div><span>Demo calls</span><b>${fmt(s.booked_calls)}</b></div></div>
+        ${mCols(s)}
         <div class="m-ads-h">Ads, by spend</div>
-        ${top.map((a) => `<div class="m-ad" role="button" tabindex="0" data-ad="${esc(a.id)}"><div class="m-ad-top"><span class="m-ad-n">${esc(a.name)}</span><svg width="16" height="16" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4.5 2.5 8 6l-3.5 3.5"/></svg></div><div class="m-bar thin"><i style="width:${Math.max(2, (a.cost / mx) * 100)}%"></i></div>
-          <div class="m-ad-s"><span><b>${cur(a.cost)}</b> spent</span><span><b>${fmt(a.leads)}</b> leads</span><span><b>${fmt(a.intro_calls)}</b> intros</span></div></div>`).join("")}
-        ${ads.length > top.length ? `<div class="m-more">+ ${ads.length - top.length} more ads</div>` : ""}</section>`;
+        ${top5.map((a) => `<div class="m-ad" role="button" tabindex="0" data-ad="${esc(a.id)}"><div class="m-ad-top"><span class="m-ad-n">${esc(a.name)}</span><svg width="16" height="16" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4.5 2.5 8 6l-3.5 3.5"/></svg></div><div class="m-bar thin"><i style="width:${Math.max(2, (a.cost / mx) * 100)}%"></i></div>
+          <div class="m-ad-s"><div><b>${state.currency}${fmt(a.cost)}</b><span>spent</span></div><div><b>${fmt(a.leads)}</b><span>leads${a.leads ? " · " + mKm(a.cost / a.leads) : ""}</span></div><div><b>${fmt(a.intro_calls)}</b><span>intros${a.intro_calls ? " · " + mKm(a.cost / a.intro_calls) : ""}</span></div><div><b>${fmt(a.booked_calls)}</b><span>demos${a.booked_calls ? " · " + mKm(a.cost / a.booked_calls) : ""}</span></div></div></div>`).join("")}
+        ${ads.length > top5.length ? `<div class="m-more">+ ${ads.length - top5.length} more ads</div>` : ""}</section>`;
     }).join("")}`;
 }
+/* Date pills inside Campaigns: the same range as At a glance, so changing it here changes it there too */
+$("#mcRange").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-r]"); if (!b || b.dataset.r === state.range) return;
+  const dir = GL_ORDER.indexOf(b.dataset.r) > GL_ORDER.indexOf(state.range) ? 1 : -1;
+  state.range = b.dataset.r;
+  $("#fRange").value = state.range;
+  $("#customWrap").hidden = true;
+  [...$("#mcRange").querySelectorAll("button")].forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+  placeGlRange();
+  const body = $("#mCampBody");
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) { render(); return; }
+  body.style.transition = "opacity 110ms ease, transform 110ms ease"; body.style.opacity = "0"; body.style.transform = `translateX(${-16 * dir}px)`;
+  setTimeout(() => {
+    render();
+    body.style.transition = "none"; body.style.transform = `translateX(${16 * dir}px)`;
+    void body.offsetWidth;
+    body.style.transition = "opacity 240ms ease, transform 300ms cubic-bezier(.16,1,.3,1)"; body.style.opacity = "1"; body.style.transform = "";
+    setTimeout(() => { body.style.transition = ""; body.style.opacity = ""; body.style.transform = ""; }, 340);
+  }, 120);
+});
 $("#mCampView").addEventListener("click", (e) => {
   const ad = e.target.closest("[data-ad]");
   if (ad) { openAdSheet(ad.dataset.ad); return; }
@@ -6634,7 +6686,7 @@ function setPage(page) {
   if (page === "customers") renderCustomersPage();
   if (page === "daily") renderDailyPage();
   document.querySelectorAll(".seg").forEach(updateSegIndicator);
-  if (page === "glance") placeGlRange();
+  if (page === "glance" || page === "mcamp") placeGlRange();
   if (prevPage !== page) {
     const phone = matchMedia("(max-width:700px)").matches;
     animatePageIn($("#" + PAGE_IDS[page]), phone ? Math.sign(tabIdx(page) - tabIdx(prevPage)) : 0);
