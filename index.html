@@ -984,6 +984,7 @@ td.cell-pos,td.cell-neg{font-weight:500}
 .m-tile b{font-size:18px;font-weight:600;font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis}
 .m-tile.t-traffic{background:var(--grp-traffic)}.m-tile.t-traffic span{color:var(--gi-traffic)}
 .m-tile.t-leads{background:var(--grp-leads)}.m-tile.t-leads span{color:var(--gi-leads)}
+.m-tile.t-calls{background:var(--grp-calls)}.m-tile.t-calls span{color:var(--gi-calls)}
 .m-tile.t-intro{background:var(--grp-intro)}.m-tile.t-intro span{color:var(--gi-intro)}
 .m-sort{font-size:12.5px;color:var(--muted);margin:0 4px 8px}
 .m-card{display:flex;flex-direction:column;gap:12px;width:100%;text-align:left;background:var(--surface);
@@ -1008,7 +1009,11 @@ td.cell-pos,td.cell-neg{font-weight:500}
 .m-set-n{font-size:15px;font-weight:600;line-height:1.3}
 .m-ads-h{font-size:12.5px;font-weight:600;margin-top:2px}
 .m-ad{padding:10px 0;border-top:1px solid var(--cell);display:flex;flex-direction:column;gap:8px}
-.m-ad-n{font-size:13px;font-weight:500;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.m-ad{cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.m-ad:active{opacity:.7}
+.m-ad-top{display:flex;align-items:center;gap:8px}
+.m-ad-top svg{flex:none;color:var(--muted)}
+.m-ad-n{flex:1;min-width:0;font-size:13px;font-weight:500;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .m-ad-s{display:flex;gap:14px;font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums}
 .m-ad-s b{font-weight:600;color:var(--ink)}
 .m-more{font-size:12.5px;color:var(--muted)}
@@ -1085,6 +1090,26 @@ td.cell-pos,td.cell-neg{font-weight:500}
 .sh-st b{font-size:14px;font-weight:600;color:var(--muted)}
 .sh-step.done .sh-st b{color:var(--ink)}
 .sh-st small{font-size:12px;color:var(--muted)}
+/* Ad sheet: the leads behind one ad, with their survey answers */
+.as-title{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.as-title b{font-size:16px;font-weight:600;line-height:1.3;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.as-title .m-eyebrow.up{color:var(--muted)}
+.lead-sheet .m-chips{margin-top:2px}
+.lead-sheet .m-tile{padding:10px 9px}
+.lead-sheet .m-tile b{font-size:15px}
+.as-lead{display:block;width:100%;text-align:left;font:inherit;color:inherit;background:var(--sunk);border:0;border-radius:14px;
+  box-shadow:none;padding:10px 12px;margin-bottom:8px;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.as-lead:hover{background:var(--sunk)}
+.as-l1{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.as-l1 b{font-size:14px;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.as-l1 .chip{flex:none;font-size:10.5px;padding:2px 8px}
+.as-l2,.as-l3{font-size:12px;line-height:1.35;color:var(--ink-2);margin-top:3px;overflow-wrap:anywhere}
+.as-l2 i{font-style:normal;margin:0 5px;color:var(--muted)}
+.as-l3{display:flex;justify-content:space-between;align-items:baseline;gap:10px;color:var(--muted);margin-top:1px}
+.as-l3 span{min-width:0}
+.as-l3 small{flex:none;font-size:10.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.as-lead .none{color:var(--muted);font-style:italic}
+.as-empty{padding:18px 4px;text-align:center;color:var(--muted);font-size:13px}
 /* Progress on the left, survey answers in a tinted panel on the right */
 .sh-split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.95fr);gap:16px;align-items:start}
 .sh-split>div{min-width:0}
@@ -4956,7 +4981,7 @@ function leadSheetHTML(p) {
   const step = (label, when, done, side = "") =>
     `<div class="sh-step${done ? " done" : ""}"><div class="sh-dot"><i></i><u></u></div><div class="sh-st"><b>${label}</b><small>${esc(when)}</small></div>${side ? `<span class="sh-side">${esc(side)}</span>` : ""}</div>`;
   const survey = SURVEY_FIELDS.map(([label, test]) => `<div><dt>${label}</dt>${surveyValueHTML(label, surveyAnswerFor(p, test))}</div>`).join("");
-  return `<div class="sh-head">
+  return (leadFromAd ? `<button type="button" class="m-back" data-sheet-back style="margin-bottom:6px"><svg width="18" height="18" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" style="transform:rotate(180deg)"><path d="M4.5 2.5 8 6l-3.5 3.5"/></svg>Back to ad</button>` : "") + `<div class="sh-head">
       <span class="av lg" style="background:${av[0]};color:${av[1]}">${esc(initialsOf(nm))}</span>
       <div class="sh-who"><b>${esc(nm)}</b><span class="chip" style="background:${st.bg};color:${st.ink}">${st.t}</span></div>
       <button type="button" class="sh-close" data-sheet-close aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
@@ -4976,9 +5001,13 @@ function leadSheetHTML(p) {
     <div class="sh-survey"><h3 class="sh-h">Survey</h3><dl>${survey}</dl></div>
     </div>`;
 }
-function openLeadSheet(p) {
+function openLeadSheet(p, fromAd) {
   if (!p) return;
-  $("#sheetBody").innerHTML = leadSheetHTML(p);
+  leadFromAd = !!fromAd && adSheet.id !== null;
+  showSheet(leadSheetHTML(p));
+}
+function showSheet(html) {
+  $("#sheetBody").innerHTML = html;
   const sh = $("#leadSheet");
   sh.style.transform = "";
   sh.scrollTop = 0;
@@ -4997,11 +5026,16 @@ function closeLeadSheet() {
   document.body.style.overflow = "";
 }
 $("#sheetScrim").addEventListener("click", closeLeadSheet);
-$("#leadSheet").addEventListener("click", (e) => { if (e.target.closest("[data-sheet-close]")) closeLeadSheet(); });
+$("#leadSheet").addEventListener("click", (e) => {
+  if (e.target.closest("[data-sheet-close]")) { closeLeadSheet(); return; }
+  if (e.target.closest("[data-sheet-back]")) { leadFromAd = false; showSheet(adSheetHTML()); return; }
+  const f = e.target.closest("[data-adf]");
+  if (f) { adSheet.f = f.dataset.adf; showSheet(adSheetHTML()); }
+});
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeLeadSheet(); });
 document.addEventListener("click", (e) => {
   const b = e.target.closest("[data-lead]"); if (!b) return;
-  openLeadSheet(leadByKey(b.dataset.lead));
+  openLeadSheet(leadByKey(b.dataset.lead), !!b.closest("#leadSheet"));
 });
 /* Backstop for taps the browser turns into a scroll or drops: a quick, nearly stationary touch on a
    lead row opens it even if no click follows. */
@@ -5086,16 +5120,52 @@ function renderMCamp() {
       return `<section class="m-set"><span class="m-eyebrow up">Ad set</span><b class="m-set-n">${esc(s.name)}</b>
         <div class="m-stats four"><div><span>Spend</span><b>${cur(s.cost)}</b></div><div><span>Leads</span><b>${fmt(s.leads)}</b></div><div><span>Intro calls</span><b>${fmt(s.intro_calls)}</b></div><div><span>Demo calls</span><b>${fmt(s.booked_calls)}</b></div></div>
         <div class="m-ads-h">Ads, by spend</div>
-        ${top.map((a) => `<div class="m-ad"><span class="m-ad-n">${esc(a.name)}</span><div class="m-bar thin"><i style="width:${Math.max(2, (a.cost / mx) * 100)}%"></i></div>
+        ${top.map((a) => `<div class="m-ad" role="button" tabindex="0" data-ad="${esc(a.id)}"><div class="m-ad-top"><span class="m-ad-n">${esc(a.name)}</span><svg width="16" height="16" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4.5 2.5 8 6l-3.5 3.5"/></svg></div><div class="m-bar thin"><i style="width:${Math.max(2, (a.cost / mx) * 100)}%"></i></div>
           <div class="m-ad-s"><span><b>${cur(a.cost)}</b> spent</span><span><b>${fmt(a.leads)}</b> leads</span><span><b>${fmt(a.intro_calls)}</b> intros</span></div></div>`).join("")}
         ${ads.length > top.length ? `<div class="m-more">+ ${ads.length - top.length} more ads</div>` : ""}</section>`;
     }).join("")}`;
 }
 $("#mCampView").addEventListener("click", (e) => {
+  const ad = e.target.closest("[data-ad]");
+  if (ad) { openAdSheet(ad.dataset.ad); return; }
   const c = e.target.closest("[data-camp]");
   if (c) { mCampSel = c.dataset.camp; renderMCamp(); animatePageIn($("#mCampView"), 1); window.scrollTo(0, 0); return; }
   if (e.target.closest("[data-camp-back]")) { mCampSel = null; renderMCamp(); animatePageIn($("#mCampView"), -1); window.scrollTo(0, 0); }
 });
+
+$("#mCampView").addEventListener("keydown", (e) => {
+  const ad = e.target.closest && e.target.closest("[data-ad]");
+  if (ad && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openAdSheet(ad.dataset.ad); }
+});
+
+/* — Ad sheet: slides up with the leads behind one ad — */
+const adSheet = { id: null, f: "all" };
+let leadFromAd = false;
+function adSheetHTML() {
+  const w = windowDates();
+  const a = groupBy(filtered(), "ad").find((x) => x.id === adSheet.id);
+  const head = (name) => `<div class="sh-head"><div class="as-title"><span class="m-eyebrow up">Ad</span><b>${esc(name)}</b></div>
+      <button type="button" class="sh-close" data-sheet-close aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>`;
+  if (!a) return head("This ad") + `<div class="as-empty">No data for this ad in the selected range.</div>`;
+  const all = sortedLeads().filter((p) => p.tracked && p.source === a.id && p.date >= w.from && p.date <= w.to);
+  const called = all.filter((p) => p.introCalled || p.booked);
+  const list = adSheet.f === "booked" ? called : all;
+  const chips = [["all", "All leads", all.length], ["booked", "Booked a call", called.length]]
+    .map(([k, l, n]) => `<button type="button" data-adf="${k}" aria-pressed="${adSheet.f === k}">${l} <i>${n}</i></button>`).join("");
+  const card = (p) => {
+    const nm = p.name || p.email || "?", st = leadStatus(p);
+    const [gym, inc, web] = SURVEY_FIELDS.map(([label, test]) => surveyAnswerFor(p, test));
+    const site = web.replace(/^https?:\/\//i, "").replace(/^www\./i, "").replace(/\/$/, "");
+    const part = (v, none) => v ? `<span>${esc(v)}</span>` : `<span class="none">${none}</span>`;
+    const body = !gym && !inc && !web ? `<div class="as-l2"><span class="none">Survey not answered</span></div>`
+      : `<div class="as-l2">${part(gym, "No gym name")}<i>·</i>${part(inc, "No income")}</div><div class="as-l3">${part(site, "No website")}<small>${esc(dayText(p.date) || "")}</small></div>`;
+    return `<button type="button" class="as-lead" data-lead="${esc(leadKey(p))}"><div class="as-l1"><b>${esc(nm)}</b><span class="chip" style="background:${st.bg};color:${st.ink}">${st.t}</span></div>${body}</button>`;
+  };
+  return head(a.name) + `<div class="m-tiles" style="--n:4">${mTile("Spend", cur(a.cost), "t-traffic")}${mTile("Leads", fmt(a.leads), "t-leads")}${mTile("Intros", fmt(a.intro_calls), "t-intro")}${mTile("Demos", fmt(a.booked_calls), "t-calls")}</div>
+    <div class="m-chips" id="adChips">${chips}</div>
+    ${list.length ? list.map(card).join("") : `<div class="as-empty">${adSheet.f === "booked" ? "Nobody from this ad has booked a call in this range." : "No leads from this ad in this range."}</div>`}`;
+}
+function openAdSheet(id) { adSheet.id = id; adSheet.f = "all"; leadFromAd = false; showSheet(adSheetHTML()); }
 
 /* — Leads: searchable list, newest first — */
 const mLead = { f: "all", q: "", shown: 40 };
