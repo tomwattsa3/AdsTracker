@@ -1093,8 +1093,8 @@ td.cell-pos,td.cell-neg{font-weight:500}
 .sh-survey dl{margin:0;display:grid;gap:12px}
 .sh-survey dt{font-size:10px;letter-spacing:.06em;text-transform:uppercase;font-weight:600;color:var(--muted)}
 .sh-survey dd{margin:2px 0 0;font-size:13px;color:var(--ink);overflow-wrap:anywhere;line-height:1.3}
+.sh-survey dd.web{font-size:12px}
 .sh-survey dd.none{color:var(--muted);font-style:italic}
-.sh-survey dd a{color:var(--accent);text-decoration:none;font-size:12px;letter-spacing:-.1px}
 @media(max-width:340px){.sh-split{grid-template-columns:1fr}}
 /* Tappable rows: no double-tap delay, no grey flash */
 .lead,.m-lead,.m-card,.m-row,.mnav button,.m-chips button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
@@ -4947,11 +4947,8 @@ function surveyAnswerFor(p, test) {
 }
 function surveyValueHTML(label, v) {
   if (!v) return `<dd class="none">Not answered</dd>`;
-  if (label === "Website") {
-    const href = /^https?:\/\//i.test(v) ? v : "https://" + v;
-    if (/^https?:\/\/[^\s]+\.[^\s]+$/i.test(href)) return `<dd><a href="${esc(href)}" target="_blank" rel="noopener">${esc(v.replace(/^https?:\/\//i, "").replace(/^www\./i, "").replace(/\/$/, ""))}</a></dd>`;
-  }
-  return `<dd>${esc(v)}</dd>`;
+  if (label === "Website") v = v.replace(/^https?:\/\//i, "").replace(/^www\./i, "").replace(/\/$/, "");
+  return `<dd${label === "Website" ? ' class="web"' : ""}>${esc(v)}</dd>`;
 }
 function leadSheetHTML(p) {
   const nm = p.name || p.email || "Unknown", av = avTint(nm), st = leadStatus(p);
