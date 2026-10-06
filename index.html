@@ -2218,13 +2218,13 @@ async function fetchRows() {
   let leadsText = null, introText = null, callsText = null, purchText = null, surveyText = null;
   if (src.mode === "sheet") {
     if (!src.url) return [];
-    dataText = await grab(src.url, "data sheet");
-    if (src.refUrl)   refText   = await grab(src.refUrl, "reference sheet");
-    if (src.leadsUrl) leadsText = await grab(src.leadsUrl, "leads sheet");
-    if (src.introUrl) introText = await grab(src.introUrl, "intro calls sheet");
-    if (src.callsUrl) callsText = await grab(src.callsUrl, "demo calls sheet");
-    if (src.purchUrl) purchText = await grab(src.purchUrl, "purchases sheet");
-    if (src.surveyUrl) surveyText = await grab(src.surveyUrl, "survey sheet");
+    // All the sheets download at the same time; one after another made the survey (last in line) the slowest to appear.
+    const get = (url, what) => (url ? grab(url, what) : null);
+    [dataText, refText, leadsText, introText, callsText, purchText, surveyText] = await Promise.all([
+      grab(src.url, "data sheet"), get(src.refUrl, "reference sheet"), get(src.leadsUrl, "leads sheet"),
+      get(src.introUrl, "intro calls sheet"), get(src.callsUrl, "demo calls sheet"),
+      get(src.purchUrl, "purchases sheet"), get(src.surveyUrl, "survey sheet"),
+    ]);
   } else {
     if (!src.text) return [];
     dataText  = src.text;
@@ -4885,7 +4885,7 @@ function surveyAnswerFor(p, test) {
   return a ? a.value : "";
 }
 function surveyValueHTML(label, v) {
-  if (!v) return `<dd class="none">Not answered</dd>`;
+  if (!v) return `<dd class="none">${loadingData && !surveyByEmail.size ? "Loading…" : "Not answered"}</dd>`;
   if (label === "Website") v = v.replace(/^https?:\/\//i, "").replace(/^www\./i, "").replace(/\/$/, "");
   return `<dd${label === "Website" ? ' class="web"' : ""}>${esc(v)}</dd>`;
 }
@@ -4918,7 +4918,7 @@ function leadSheetHTML(p) {
 function openLeadSheet(p, fromAd) {
   if (!p) return;
   leadFromAd = !!fromAd && adSheet.id !== null;
-  adSheetShown = false;
+  adSheetShown = false; shownLeadKey = leadKey(p);
   showSheet(leadSheetHTML(p));
 }
 function showSheet(html) {
@@ -4934,6 +4934,7 @@ function showSheet(html) {
 function closeLeadSheet() {
   const sh = $("#leadSheet");
   if (!sh || !sh.classList.contains("on")) return;
+  shownLeadKey = null;
   sh.classList.remove("on", "dragging");
   sh.style.transform = "";
   $("#sheetScrim").classList.remove("on");
@@ -4943,7 +4944,7 @@ function closeLeadSheet() {
 $("#sheetScrim").addEventListener("click", closeLeadSheet);
 $("#leadSheet").addEventListener("click", (e) => {
   if (e.target.closest("[data-sheet-close]")) { closeLeadSheet(); return; }
-  if (e.target.closest("[data-sheet-back]")) { leadFromAd = false; adSheetShown = true; showSheet(adSheetHTML()); return; }
+  if (e.target.closest("[data-sheet-back]")) { leadFromAd = false; adSheetShown = true; shownLeadKey = null; showSheet(adSheetHTML()); return; }
   const f = e.target.closest("[data-adf]");
   if (f) { adSheet.f = f.dataset.adf; showSheet(adSheetHTML()); }
 });
@@ -5109,14 +5110,17 @@ function adSheetHTML() {
     <div class="m-chips" id="adChips">${chips}</div>
     ${loadingData && !allLeads.length ? '<div class="as-empty">Loading leads…</div>' : list.length ? list.map(card).join("") : `<div class="as-empty">${adSheet.f === "booked" ? "Nobody from this ad has booked a call in this range." : "No leads from this ad in this range."}</div>`}`;
 }
-function openAdSheet(id) { adSheet.id = id; adSheet.f = "all"; leadFromAd = false; adSheetShown = true; showSheet(adSheetHTML()); }
+function openAdSheet(id) { adSheet.id = id; adSheet.f = "all"; leadFromAd = false; adSheetShown = true; shownLeadKey = null; showSheet(adSheetHTML()); }
 /* A refresh empties the lead list for a moment, so an ad sheet that is open fills itself in again once the new data lands. */
 let adSheetShown = false;
-function refreshAdSheet() {
+function refreshAdSheet() {   // (also redraws an open lead card, so its survey answers appear when they land)
   const sh = $("#leadSheet");
-  if (!adSheetShown || !sh || !sh.classList.contains("on") || leadFromAd || !$("#adChips")) return;
+  if (!sh || !sh.classList.contains("on")) return;
+  if (shownLeadKey) { const p = leadByKey(shownLeadKey); if (p) $("#sheetBody").innerHTML = leadSheetHTML(p); return; }
+  if (!adSheetShown || !$("#adChips")) return;
   $("#sheetBody").innerHTML = adSheetHTML();
 }
+let shownLeadKey = null;
 
 /* — Leads: searchable list, newest first — */
 const mLead = { f: "all", q: "", shown: 40 };
