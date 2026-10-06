@@ -6599,7 +6599,18 @@ $("#btnTheme").addEventListener("click", () => {
 });
 
 /* ═══════════ Boot ═════════════════════════════════════════════ */
-async function boot() {
+/* Refreshes run one at a time. Two overlapping loads would both fill the shared lead list
+   (every lead twice) until the next refresh; a request that arrives mid-load queues one more run. */
+let bootRun = null, bootQueued = false;
+function boot() {
+  if (bootRun) { bootQueued = true; return bootRun; }
+  bootRun = bootOnce().finally(() => {
+    bootRun = null;
+    if (bootQueued) { bootQueued = false; boot().catch(() => {}); }
+  });
+  return bootRun;
+}
+async function bootOnce() {
   allLeads.forEach((p) => leadCache.set(leadKey(p), p));
   loadingData = true;
   $("#btnReload").textContent = "Loading…";
