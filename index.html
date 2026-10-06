@@ -1085,6 +1085,17 @@ td.cell-pos,td.cell-neg{font-weight:500}
 .sh-st b{font-size:14px;font-weight:600;color:var(--muted)}
 .sh-step.done .sh-st b{color:var(--ink)}
 .sh-st small{font-size:12px;color:var(--muted)}
+/* Progress on the left, survey answers in a tinted panel on the right */
+.sh-split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.95fr);gap:16px;align-items:start}
+.sh-split>div{min-width:0}
+.sh-survey{background:var(--sunk);border-radius:16px;padding:14px 12px}
+.sh-survey .sh-h{margin-bottom:12px}
+.sh-survey dl{margin:0;display:grid;gap:12px}
+.sh-survey dt{font-size:10px;letter-spacing:.06em;text-transform:uppercase;font-weight:600;color:var(--muted)}
+.sh-survey dd{margin:2px 0 0;font-size:13px;color:var(--ink);overflow-wrap:anywhere;line-height:1.3}
+.sh-survey dd.none{color:var(--muted);font-style:italic}
+.sh-survey dd a{color:var(--accent);text-decoration:none;font-size:12px;letter-spacing:-.1px}
+@media(max-width:340px){.sh-split{grid-template-columns:1fr}}
 /* Tappable rows: no double-tap delay, no grey flash */
 .lead,.m-lead,.m-card,.m-row,.mnav button,.m-chips button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 /* glance rows are buttons now */
@@ -4924,12 +4935,30 @@ const sortedLeads = () => allLeads.map((p, i) => ({ p, i }))
   .sort((a, b) => (b.p.date || "").localeCompare(a.p.date || "") || b.i - a.i).map((x) => x.p);
 
 /* — Lead details: a sheet that slides up from the bottom — */
+const SURVEY_FIELDS = [
+  ["Gym name", (q) => /name of your gym|gym name/i.test(q)],
+  ["Income", (q) => /revenue|income/i.test(q)],
+  ["Website", (q) => /website|url/i.test(q)],
+];
+function surveyAnswerFor(p, test) {
+  const sv = p.email ? surveyByEmail.get(String(p.email).toLowerCase()) : null;
+  const a = sv && sv.answers.find((x) => test(x.label) && x.value);
+  return a ? a.value : "";
+}
+function surveyValueHTML(label, v) {
+  if (!v) return `<dd class="none">Not answered</dd>`;
+  if (label === "Website") {
+    const href = /^https?:\/\//i.test(v) ? v : "https://" + v;
+    if (/^https?:\/\/[^\s]+\.[^\s]+$/i.test(href)) return `<dd><a href="${esc(href)}" target="_blank" rel="noopener">${esc(v.replace(/^https?:\/\//i, "").replace(/^www\./i, "").replace(/\/$/, ""))}</a></dd>`;
+  }
+  return `<dd>${esc(v)}</dd>`;
+}
 function leadSheetHTML(p) {
   const nm = p.name || p.email || "Unknown", av = avTint(nm), st = leadStatus(p);
   const row = (k, v) => v ? `<div class="sh-row"><span>${k}</span><b>${esc(v)}</b></div>` : "";
   const step = (label, when, done, side = "") =>
     `<div class="sh-step${done ? " done" : ""}"><div class="sh-dot"><i></i><u></u></div><div class="sh-st"><b>${label}</b><small>${esc(when)}</small></div>${side ? `<span class="sh-side">${esc(side)}</span>` : ""}</div>`;
-  const adSide = leadAd(p) !== "—" ? leadAd(p) : (!p.tracked && leadCampaign(p) !== "—" ? leadCampaign(p) : "");
+  const survey = SURVEY_FIELDS.map(([label, test]) => `<div><dt>${label}</dt>${surveyValueHTML(label, surveyAnswerFor(p, test))}</div>`).join("");
   return `<div class="sh-head">
       <span class="av lg" style="background:${av[0]};color:${av[1]}">${esc(initialsOf(nm))}</span>
       <div class="sh-who"><b>${esc(nm)}</b><span class="chip" style="background:${st.bg};color:${st.ink}">${st.t}</span></div>
@@ -4939,12 +4968,15 @@ function leadSheetHTML(p) {
       ${row("Email", p.email)}${row("Campaign", leadCampaign(p) !== "—" ? leadCampaign(p) : "")}
       ${row("Ad set", leadAdset(p) !== "—" ? leadAdset(p) : "")}${row("Ad", leadAd(p) !== "—" ? leadAd(p) : "")}
     </div>
-    <h3 class="sh-h">Progress</h3>
+    <div class="sh-split">
+    <div><h3 class="sh-h">Progress</h3>
     <div class="sh-steps">
-      ${step("Opted in", dayText(p.date) || "Unknown", true, adSide)}
+      ${step("Opted in", dayText(p.date) || "Unknown", true)}
       ${step("Intro call", p.introCalled ? (dayText(p.introCallDate) || "Booked") : "Not yet", p.introCalled)}
       ${step("Demo call", p.booked ? (dayText(p.bookedDate) || "Booked") : "Not yet", p.booked)}
       ${step("Purchase", p.purchased ? `${cur(p.purchaseAmount)}${dayText(p.purchaseDate) ? " on " + dayText(p.purchaseDate) : ""}` : "Not yet", p.purchased)}
+    </div></div>
+    <div class="sh-survey"><h3 class="sh-h">Survey</h3><dl>${survey}</dl></div>
     </div>`;
 }
 function openLeadSheet(p) {
