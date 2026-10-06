@@ -5004,6 +5004,7 @@ function leadSheetHTML(p) {
 function openLeadSheet(p, fromAd) {
   if (!p) return;
   leadFromAd = !!fromAd && adSheet.id !== null;
+  adSheetShown = false;
   showSheet(leadSheetHTML(p));
 }
 function showSheet(html) {
@@ -5028,7 +5029,7 @@ function closeLeadSheet() {
 $("#sheetScrim").addEventListener("click", closeLeadSheet);
 $("#leadSheet").addEventListener("click", (e) => {
   if (e.target.closest("[data-sheet-close]")) { closeLeadSheet(); return; }
-  if (e.target.closest("[data-sheet-back]")) { leadFromAd = false; showSheet(adSheetHTML()); return; }
+  if (e.target.closest("[data-sheet-back]")) { leadFromAd = false; adSheetShown = true; showSheet(adSheetHTML()); return; }
   const f = e.target.closest("[data-adf]");
   if (f) { adSheet.f = f.dataset.adf; showSheet(adSheetHTML()); }
 });
@@ -5163,9 +5164,16 @@ function adSheetHTML() {
   };
   return head(a.name) + `<div class="m-tiles" style="--n:4">${mTile("Spend", cur(a.cost), "t-traffic")}${mTile("Leads", fmt(a.leads), "t-leads")}${mTile("Intros", fmt(a.intro_calls), "t-intro")}${mTile("Demos", fmt(a.booked_calls), "t-calls")}</div>
     <div class="m-chips" id="adChips">${chips}</div>
-    ${list.length ? list.map(card).join("") : `<div class="as-empty">${adSheet.f === "booked" ? "Nobody from this ad has booked a call in this range." : "No leads from this ad in this range."}</div>`}`;
+    ${loadingData && !allLeads.length ? '<div class="as-empty">Loading leads…</div>' : list.length ? list.map(card).join("") : `<div class="as-empty">${adSheet.f === "booked" ? "Nobody from this ad has booked a call in this range." : "No leads from this ad in this range."}</div>`}`;
 }
-function openAdSheet(id) { adSheet.id = id; adSheet.f = "all"; leadFromAd = false; showSheet(adSheetHTML()); }
+function openAdSheet(id) { adSheet.id = id; adSheet.f = "all"; leadFromAd = false; adSheetShown = true; showSheet(adSheetHTML()); }
+/* A refresh empties the lead list for a moment, so an ad sheet that is open fills itself in again once the new data lands. */
+let adSheetShown = false;
+function refreshAdSheet() {
+  const sh = $("#leadSheet");
+  if (!adSheetShown || !sh || !sh.classList.contains("on") || leadFromAd || !$("#adChips")) return;
+  $("#sheetBody").innerHTML = adSheetHTML();
+}
 
 /* — Leads: searchable list, newest first — */
 const mLead = { f: "all", q: "", shown: 40 };
@@ -6710,6 +6718,7 @@ async function bootOnce() {
   lastRefreshAt = Date.now();
   $("#btnReload").textContent = "Re-sync";
   render();
+  refreshAdSheet();
   detectChanges();
   postSheetConfig();
 }
