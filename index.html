@@ -954,11 +954,6 @@ td.cell-pos,td.cell-neg{font-weight:500}
 .skel-fill{display:block;border-radius:6px;
   background:linear-gradient(90deg,var(--sunk-2) 25%,var(--axis) 50%,var(--sunk-2) 75%);background-size:300% 100%;animation:skelShimmer 1.3s linear infinite}
 .skel-card{pointer-events:none}
-.toast{position:fixed;left:16px;right:16px;bottom:calc(86px + env(safe-area-inset-bottom));z-index:80;max-width:560px;margin:0 auto;
-  background:#111827;color:#fff;border-radius:14px;padding:13px 16px;font-size:13.5px;line-height:1.4;white-space:pre-line;box-shadow:0 8px 28px rgba(0,0,0,.28);
-  opacity:0;transform:translateY(16px);pointer-events:none;transition:opacity .25s ease,transform .3s var(--ease)}
-.toast.on{opacity:1;transform:none;pointer-events:auto;cursor:pointer}
-@media(min-width:701px){.toast{bottom:20px}}
 .gl-bar .skel-fill{width:100%;border-radius:5px 5px 0 0}
 
 /* ── Phone app ─────────────────────────────────────────────── */
@@ -1062,8 +1057,8 @@ td.cell-pos,td.cell-neg{font-weight:500}
   transition:background var(--dur-2) var(--ease)}
 .m-switch i{width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);
   transition:transform var(--dur-2) var(--ease)}
-#mDark[aria-checked="true"] .m-switch,#mNotify[aria-checked="true"] .m-switch{background:var(--accent)}
-#mDark[aria-checked="true"] .m-switch i,#mNotify[aria-checked="true"] .m-switch i{transform:translateX(20px)}
+#mDark[aria-checked="true"] .m-switch{background:var(--accent)}
+#mDark[aria-checked="true"] .m-switch i{transform:translateX(20px)}
 /* Lead details sheet */
 .sheet-scrim{position:fixed;inset:0;background:rgba(17,24,39,.45);opacity:0;pointer-events:none;
   transition:opacity .26s ease;z-index:60}
@@ -1288,15 +1283,6 @@ if (localStorage.getItem("santermedia.theme") === "dark") {
       <span class="m-ico" style="background:var(--grp-leads);color:var(--gi-leads)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7.5 8.5 12 4l4.5 4.5M6 13v6h12v-6"/></svg></span>
       <span class="m-row-t"><b>Install app</b><small>Tap Share, then Add to Home Screen</small></span>
     </div>
-    <button type="button" class="m-row" id="mNotify" role="switch" aria-checked="false">
-      <span class="m-ico" style="background:var(--grp-calls);color:var(--gi-calls)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9a6 6 0 0 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9ZM10 20a2 2 0 0 0 4 0"/></svg></span>
-      <span class="m-row-t"><b>Alerts</b><small id="mNotifyNote">Get alerts for new leads and booked calls</small></span>
-      <span class="m-switch"><i></i></span>
-    </button>
-    <button type="button" class="m-row" id="mPushCopy" hidden>
-      <span class="m-ico" style="background:var(--grp-calls);color:var(--gi-calls)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg></span>
-      <span class="m-row-t"><b>Copy instant-alert link</b><small id="mPushNote">For the GitHub alert job (one-off setup)</small></span>
-    </button>
     <button type="button" class="m-row" id="mResync">
       <span class="m-ico" style="background:var(--sunk-2);color:var(--ink-2)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.3-4.6L4 8.5M4 4v4.5h4.5M4 13a8 8 0 0 0 14.3 4.6l1.7-2.1M20 20v-4.5h-4.5"/></svg></span>
       <span class="m-row-t"><b>Re-sync data</b><small id="mSyncNote">Pull the latest from the Google Sheet</small></span>
@@ -1885,7 +1871,6 @@ if (localStorage.getItem("santermedia.theme") === "dark") {
 </div>
 
 <!-- ── Nav drawer ─────────────────────────────────────────── -->
-<div id="toast" class="toast" role="status" aria-live="polite"></div>
 
 <nav class="mnav" aria-label="Main">
   <button type="button" data-tab="glance" aria-current="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11 12 4l8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></svg>Home</button>
@@ -4851,112 +4836,18 @@ $("#mInstall").addEventListener("click", async () => {
 });
 syncInstallRows();
 
-/* ═══════════ Keeping fresh + telling you what's new ═══ */
-const SEEN_KEY = "santermedia.seen.v1";
-let toastTimer = null, toastPage = null;
-function showToast(text, page) {
-  const t = $("#toast"); toastPage = page || null;
-  t.textContent = text; t.classList.add("on");
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("on"), 6500);
-}
-$("#toast").addEventListener("click", () => { $("#toast").classList.remove("on"); if (toastPage) setPage(toastPage); });
-function notifyNow(tag, title, body, page) {
-  if (!("Notification" in window) || Notification.permission !== "granted" || !("serviceWorker" in navigator)) return;
-  navigator.serviceWorker.ready.then((reg) => reg.showNotification(title, {
-    body, icon: "icon-192.png", badge: "icon-192.png", tag: "alert-" + tag, renotify: true, data: { page },
-  })).catch(() => {});
-}
-/** Compares what's loaded now with what was here last time and says what's new. */
-function detectChanges() {
-  if (!allLeads.length) return;
-  const snap = { leads: allLeads.map(leadKey), intro: allLeads.filter((p) => p.introCalled).map(leadKey), demo: allLeads.filter((p) => p.booked).map(leadKey) };
-  let prev = null;
-  try { prev = JSON.parse(localStorage.getItem(SEEN_KEY) || "null"); } catch {}
-  try { localStorage.setItem(SEEN_KEY, JSON.stringify(snap)); } catch {}
-  if (!prev) return;                                   // first run: just remember what's here
-  const fresh = (now, old) => { const o = new Set(old || []); return now.filter((k) => !o.has(k)); };
-  const people = new Map(allLeads.map((p) => [leadKey(p), p]));
-  const lines = [];
-  [["lead", "New lead", "new leads", fresh(snap.leads, prev.leads)],
-   ["intro", "Intro call booked", "new intro calls booked", fresh(snap.intro, prev.intro)],
-   ["demo", "Demo call booked", "new demo calls booked", fresh(snap.demo, prev.demo)]]
-    .filter((e) => e[3].length && e[3].length <= 25)
-    .forEach(([tag, one, many, keys]) => {
-      const names = keys.map((k) => (people.get(k) || {}).name || "Someone");
-      const title = keys.length === 1 ? one : `${keys.length} ${many}`;
-      const body = keys.length === 1 ? names[0] : names.slice(0, 3).join(", ") + (keys.length > 3 ? ` +${keys.length - 3} more` : "");
-      if (document.visibilityState === "visible") lines.push(`${title}: ${body}`);
-      else notifyNow(tag, title, body, "mleads");
-    });
-  if (lines.length) showToast(lines.join("\n"), "mleads");
-}
-/* Refresh on its own while the app is open, and the moment you come back to it */
-setInterval(() => {
-  if (document.visibilityState === "visible" && !loadingData && Date.now() - lastRefreshAt > 3 * 60 * 1000) boot().catch(() => {});
-}, 30000);
+/* ═══════════ Keeping fresh ═══
+   No timers and no alerts. The sheet is read when the app opens, on Re-sync or pull-down, and when you come back
+   to the app after a quiet spell. */
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible" && !loadingData && Date.now() - lastRefreshAt > 60 * 1000) boot().catch(() => {});
+  if (document.visibilityState === "visible" && !loadingData && Date.now() - lastRefreshAt > 15 * 60 * 1000) boot().catch(() => {});
 });
-addEventListener("online", () => { if (!loadingData) boot().catch(() => {}); });
-
-/* Hand the sheet links to the service worker so it can check them in the background */
-function postSheetConfig() {
-  if (!("serviceWorker" in navigator) || state.source.mode !== "sheet") return;
-  navigator.serviceWorker.ready.then((reg) => reg.active && reg.active.postMessage({
-    type: "config", urls: { leads: state.source.leadsUrl, intro: state.source.introUrl, calls: state.source.callsUrl },
-  })).catch(() => {});
-}
-if ("serviceWorker" in navigator) navigator.serviceWorker.addEventListener("message", (e) => {
-  if (e.data && e.data.type === "goto" && e.data.page) setPage(e.data.page);
-  if (e.data && e.data.type === "refresh") { if (!loadingData) boot().catch(() => {}); }   // a push arrived while the app is open: pull the new data
-});
-const VAPID_PUBLIC = "BMC2ZRhHiU6bdbA8i-4bC0JzQhisnJ9A_C8JkuDZ1ouCNzG79oHs9pozhnNpLtompvep81wu0fvC61IAbePoH2w";
-const b64ToBytes = (b) => { const p = "=".repeat((4 - b.length % 4) % 4), r = atob((b + p).replace(/-/g, "+").replace(/_/g, "/")); return Uint8Array.from(r, (c) => c.charCodeAt(0)); };
-let pushSub = null;
-async function ensurePushSub() {
-  try {
-    const reg = await navigator.serviceWorker.ready;
-    if (!reg.pushManager) return null;
-    pushSub = (await reg.pushManager.getSubscription()) || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToBytes(VAPID_PUBLIC) });
-  } catch { pushSub = null; }
-  syncNotifyRow();
-  return pushSub;
-}
-async function enableBackgroundCheck() {
-  try {
-    const reg = await navigator.serviceWorker.ready;
-    if (reg.periodicSync) await reg.periodicSync.register("check-leads", { minInterval: 15 * 60 * 1000 });
-    postSheetConfig();
-    ensurePushSub();
-    if (reg.active) reg.active.postMessage({ type: "check" });   // take a first look now so later checks have something to compare with
-  } catch {}
-}
-function syncNotifyRow() {
-  const row = $("#mNotify"); if (!row) return;
-  if (!("Notification" in window)) { row.hidden = true; return; }
-  const pc = $("#mPushCopy"); if (pc) pc.hidden = !(Notification.permission === "granted" && pushSub);
-  const perm = Notification.permission;
-  row.setAttribute("aria-checked", String(perm === "granted"));
-  $("#mNotifyNote").textContent = perm === "granted" ? "On: alerts for new leads and booked calls"
-    : perm === "denied" ? "Blocked. Turn alerts on in your phone's site settings" : "Get alerts for new leads and booked calls";
-}
-$("#mNotify").addEventListener("click", async () => {
-  if (!("Notification" in window)) return;
-  if (Notification.permission === "default") {
-    const r = await Notification.requestPermission();
-    if (r === "granted") { await enableBackgroundCheck(); notifyNow("hello", "Alerts are on", "You'll hear about new leads and booked calls.", "glance"); }
-  } else if (Notification.permission === "granted") {
-    showToast("Alerts are on. Tap the switch in your phone's site settings to turn them off.");
-  }
-  syncNotifyRow();
-});
-$("#mPushCopy").addEventListener("click", async () => {
-  if (!pushSub) return;
-  const text = JSON.stringify(pushSub.toJSON());
-  try { await navigator.clipboard.writeText(text); showToast("Copied. Paste it into the PUSH_SUBSCRIPTION secret on GitHub."); }
-  catch { window.prompt("Copy this and paste it into the PUSH_SUBSCRIPTION secret on GitHub:", text); }
-});
-if ("Notification" in window && Notification.permission === "granted") enableBackgroundCheck();
+/* One-off tidy-up for phones that had alerts switched on in an earlier version */
+try { localStorage.removeItem("santermedia.seen.v1"); } catch {}
+if ("serviceWorker" in navigator) navigator.serviceWorker.ready.then(async (reg) => {
+  try { const sub = reg.pushManager && await reg.pushManager.getSubscription(); if (sub) await sub.unsubscribe(); } catch {}
+  try { if (reg.periodicSync) await reg.periodicSync.unregister("check-leads"); } catch {}
+}).catch(() => {});
 
 /* ═══════════ Phone app: tabs, campaigns, leads, more, lead sheet ═══ */
 const dayText = (v) => {
@@ -5285,7 +5176,6 @@ function renderMMore() {
     `<button type="button" class="m-row" data-more="${k}"><span class="m-ico" style="background:${bg};color:${ink}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${d}"/></svg></span>
       <span class="m-row-t"><b>${l}</b><small>${sub}</small></span><svg class="m-chev" width="16" height="16" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4.5 2.5 8 6l-3.5 3.5"/></svg></button>`).join("");
   $("#mDark").setAttribute("aria-checked", String(document.documentElement.getAttribute("data-theme") === "dark"));
-  syncNotifyRow();
   $("#mSyncNote").textContent = $("#acct").textContent || "Pull the latest from the Google Sheet";
 }
 $("#mMoreView").addEventListener("click", (e) => {
@@ -6771,8 +6661,6 @@ async function bootOnce() {
   $("#btnReload").textContent = "Re-sync";
   render();
   refreshAdSheet();
-  detectChanges();
-  postSheetConfig();
 }
 
 try {
