@@ -2663,7 +2663,8 @@ function fmtDate(v) {
   const iso = parseAnyDate(v);
   if (!iso) return v ? String(v).trim() : "";
   const [y, m, d] = iso.split("-");
-  return `${d}-${m}-${y.slice(2)}`;
+  // Spelled-out month: 06-10-26 reads as 10 June to anyone used to month-first dates
+  return `${+d} ${["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][+m - 1]} ${y}`;
 }
 
 /** Attribution counts only a client's FIRST purchase — a repeat buyer must
@@ -2777,7 +2778,7 @@ let ltvByEmail = new Map();
    as a survey question automatically — add a column to the sheet and it
    shows up here with no code change. */
 const SURVEY_META = {
-  date:          ["optinpurchasedate", "optindate", "surveydate", "date"],
+  date:          ["optinpurchasedate", "optindate", "surveydate", "date", "e"],   // the survey sheet's first column is headed just "e"
   name:          ["name", "fullname"],
   email:         ["emailaddress", "email"],
   phone:         ["phonenumber", "phone"],
@@ -4343,7 +4344,7 @@ function renderAnalyticsChart(data, cyc) {
   anGeom = { data, x, y, P, iw, W };
   hookAnalyticsChart(svg);
 }
-const shortDateShort = (s) => fmtDate(s);
+const shortDateShort = (s) => fmtDate(s).replace(/ \d{4}$/, "");   // chart ticks: "6 Oct"
 
 function hookAnalyticsChart(svg) {
   const tip = $("#anTip"), hit = svg.querySelector("#anHit");
