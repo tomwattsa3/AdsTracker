@@ -697,6 +697,22 @@ header.top #build{display:none}
   background:var(--surface);border:1px solid var(--border);border-radius:12px;
   box-shadow:var(--shadow-xs);font-size:15px;color:var(--ink);font-variant-numeric:tabular-nums}
 .range-pill svg{flex:none}
+.range-pill{cursor:pointer;user-select:none;transition:background var(--dur-1) var(--ease),border-color var(--dur-1) var(--ease)}
+.range-pill:hover{background:var(--sunk)}
+.range-pill:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.range-pill .rp-caret{margin-left:2px;color:var(--muted)}
+.rp-pop{position:fixed;z-index:90;width:272px;background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  box-shadow:0 12px 36px rgba(17,24,39,.18);padding:6px}
+.rp-pop button.rp-opt{display:flex;align-items:center;justify-content:space-between;width:100%;border:0;background:transparent;box-shadow:none;
+  text-align:left;padding:9px 12px;border-radius:9px;font-size:14px;color:var(--ink)}
+.rp-pop button.rp-opt:hover{background:var(--sunk)}
+.rp-pop button.rp-opt[aria-checked="true"]{background:var(--sunk-2);font-weight:600}
+.rp-pop button.rp-opt[aria-checked="true"]::after{content:"✓";color:var(--accent)}
+.rp-custom{border-top:1px solid var(--border);margin-top:6px;padding:10px 8px 6px;display:grid;gap:8px}
+.rp-custom label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.rp-custom .rp-dates{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.rp-custom input{width:100%;min-width:0}
+.rp-custom button{justify-self:end}
 
 /* ── Stat tiles ───────────────────────────────────────────── */
 .kpis{grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:8px}
@@ -1333,7 +1349,7 @@ if (localStorage.getItem("santermedia.theme") === "dark") {
   <div id="adsView" hidden>
   <div class="page-head">
     <h1 class="page-title">Ads Manager</h1>
-    <div class="range-pill" data-range-pill><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span></span></div>
+    <div class="range-pill" data-range-pill role="button" tabindex="0" aria-haspopup="dialog" aria-label="Change date range"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span></span><svg class="rp-caret" width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5"/></svg></div>
   </div>
 
   <!-- ── Stat tiles ───────────────────────────────────────── -->
@@ -1404,7 +1420,7 @@ if (localStorage.getItem("santermedia.theme") === "dark") {
   <div id="dashboardView" hidden>
   <div class="page-head">
     <h1 class="page-title">Dashboard</h1>
-    <div class="range-pill" data-range-pill><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span></span></div>
+    <div class="range-pill" data-range-pill role="button" tabindex="0" aria-haspopup="dialog" aria-label="Change date range"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span></span><svg class="rp-caret" width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5"/></svg></div>
   </div>
 
   <!-- ── Stage conversion rates ───────────────────────────── -->
@@ -4660,6 +4676,53 @@ function renderRangePill() {
   const txt = from || to ? `${lead}${dmy(from)} - ${dmy(to)}` : lead.replace(/: $/, "");
   document.querySelectorAll("[data-range-pill] span").forEach((el) => { el.textContent = txt; });
 }
+
+/* Click the date pill to change the range: presets, or a custom from/to. Drives the same state as the Date range dropdown. */
+const RP_OPTS = [["today", "Today"], ["yesterday", "Yesterday"], ["7", "Last 7 days"], ["lastweek", "Last week"], ["30", "Last 30 days"], ["mtd", "Month to date"], ["all", "All time"]];
+let rpPop = null;
+function applyRange(range, from, to) {
+  state.range = range;
+  if (range === "custom") { state.from = from; state.to = to; $("#fFrom").value = from; $("#fTo").value = to; }
+  $("#fRange").value = range;
+  $("#customWrap").hidden = range !== "custom";
+  render();
+}
+function closeRangePop() { if (rpPop) { rpPop.remove(); rpPop = null; } }
+function openRangePop(pill) {
+  closeRangePop();
+  const w = windowDates(), ds = state.rows.map((r) => r.date).filter(Boolean).sort();
+  const from = state.range === "all" ? (ds[0] || "") : w.from, to = state.range === "all" ? (ds[ds.length - 1] || "") : w.to;
+  const pop = document.createElement("div");
+  pop.className = "rp-pop"; pop.setAttribute("role", "dialog"); pop.setAttribute("aria-label", "Date range");
+  pop.innerHTML = RP_OPTS.map(([v, l]) => `<button type="button" class="rp-opt" role="menuitemradio" data-rp="${v}" aria-checked="${state.range === v}">${l}</button>`).join("") +
+    `<div class="rp-custom"><label>Custom range</label><div class="rp-dates"><input type="date" id="rpFrom" value="${from}" aria-label="From"><input type="date" id="rpTo" value="${to}" aria-label="To"></div>
+     <button type="button" class="primary" id="rpApply">Apply</button></div>`;
+  document.body.appendChild(pop); rpPop = pop;
+  const b = pill.getBoundingClientRect();
+  pop.style.top = (b.bottom + 8) + "px";
+  pop.style.left = Math.max(8, Math.min(innerWidth - pop.offsetWidth - 8, b.right - pop.offsetWidth)) + "px";
+  pop.addEventListener("click", (e) => {
+    const o = e.target.closest("[data-rp]");
+    if (o) { applyRange(o.dataset.rp); closeRangePop(); return; }
+    if (e.target.closest("#rpApply")) {
+      let f = $("#rpFrom").value, t = $("#rpTo").value;
+      if (!f || !t) return;
+      if (f > t) [f, t] = [t, f];
+      applyRange("custom", f, t); closeRangePop();
+    }
+  });
+}
+document.addEventListener("click", (e) => {
+  const pill = e.target.closest("[data-range-pill]");
+  if (pill) { rpPop ? closeRangePop() : openRangePop(pill); return; }
+  if (rpPop && !e.target.closest(".rp-pop")) closeRangePop();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeRangePop();
+  const pill = e.target.closest && e.target.closest("[data-range-pill]");
+  if (pill && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); rpPop ? closeRangePop() : openRangePop(pill); }
+});
+addEventListener("resize", closeRangePop);
 
 function renderTabCounts() {
   $("#cntCampaign").textContent = groupBy(scopeFor("campaign"), "campaign").length;
