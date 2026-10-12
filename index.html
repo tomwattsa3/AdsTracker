@@ -240,6 +240,11 @@ button.ghost{background:transparent;box-shadow:none}
 .tile{padding:15px 17px;display:flex;flex-direction:column;gap:3px}
 .tile .label{font-size:11.5px;color:var(--muted)}
 .tile .value{font-size:25px;font-weight:620;letter-spacing:-.02em;line-height:1.15}
+.tile.people{cursor:pointer;transition:background var(--dur-1) var(--ease),box-shadow var(--dur-1) var(--ease),transform var(--dur-1) var(--ease)}
+.tile.people:hover{box-shadow:inset 0 0 0 1.5px var(--accent)}
+.tile.people:active{transform:scale(.985)}
+.tile.people .label::after{content:" ›";opacity:.6}
+.tile.people:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .tile .value.people{cursor:pointer;text-decoration:underline dotted;text-underline-offset:4px;
   text-decoration-color:var(--axis);display:inline-block;
   transition:color var(--dur-1) var(--ease),text-decoration-color var(--dur-1) var(--ease),transform var(--dur-1) var(--ease)}
@@ -4643,17 +4648,21 @@ function renderKpis(t, picked = 0, scoped = null) {
     { label: "Sales", value: fmt(t.jobs), kind: "closes", sub: each(t.jobs, m.cpjob), cls: "t-sales" },
   ];
   const tiles = phone ? phoneTiles : wideTiles;
+  const what = { campaign: "campaigns", adset: "ad sets", ad: "ads" }[level()];
+  const one = { campaign: "campaign", adset: "ad set", ad: "ad" }[level()];
+  // A tile opens the people behind its number: everything in the date range, or just the ticked / scoped rows
+  const tileScope = (picked || scoped) ? "__totals__" : "everything";
+  const rangeTxt = capFirst(rangeLabel(state.range, windowDates()));
+  const tileLabel = picked ? `${rangeTxt} · ${picked} selected ${picked === 1 ? one : what}` : scoped ? `${rangeTxt} · ${scoped.text}` : rangeTxt;
   $("#kpis").innerHTML = tiles.map((x) => {
-    const open = x.kind && x.value !== "0" && x.value !== "—" && !picked && !scoped;
+    const open = x.kind && x.value !== "0" && x.value !== "—";
     return `
-    <div class="card tile ${x.cls}">
+    <div class="card tile ${x.cls}${open ? " people" : ""}"${open ? ` data-p="${x.kind}" data-rk="${tileScope}" data-label="${esc(tileLabel)}" role="button" tabindex="0" aria-label="See ${x.label.toLowerCase()}"` : ""}>
       <span class="label">${x.label}</span>
-      <span class="value${open ? " people" : ""}"${open ? ` data-p="${x.kind}"` : ""}>${x.value}</span>
+      <span class="value">${x.value}</span>
       <span class="sub">${x.sub}</span>
     </div>`;
   }).join("");
-  const what = { campaign: "campaigns", adset: "ad sets", ad: "ads" }[level()];
-  const one = { campaign: "campaign", adset: "ad set", ad: "ad" }[level()];
   const next = { campaign: "Open the Ad Sets tab to see only theirs. ", adset: "Open the Ads tab to see only theirs. ", ad: "" }[level()];
   $("#kpiNote").innerHTML = picked
     ? `Showing ${picked} selected ${picked === 1 ? one : what}${scoped ? ` (in ${scoped.text})` : ""}. ${next}<button type="button" class="linklike" id="btnClearSel">Clear selection</button>.`
@@ -4723,6 +4732,10 @@ document.addEventListener("keydown", (e) => {
   if (pill && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); rpPop ? closeRangePop() : openRangePop(pill); }
 });
 addEventListener("resize", closeRangePop);
+$("#kpis").addEventListener("keydown", (e) => {
+  const t = e.target.closest && e.target.closest(".tile.people");
+  if (t && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); t.click(); }
+});
 
 function renderTabCounts() {
   $("#cntCampaign").textContent = groupBy(scopeFor("campaign"), "campaign").length;
@@ -5889,8 +5902,8 @@ $("#fCampaignSearch").addEventListener("input", (e) => {
   const el = e.target.closest("[data-p]"); if (!el) return;
   e.stopPropagation();
   const tr = el.closest("tr");
-  showPeople(el.dataset.p, tr ? (tr.dataset.key || "__totals__") : "everything",
-    tr ? (tr.querySelector("td.stick") || {}).textContent || "" : "All time · everything");
+  showPeople(el.dataset.p, tr ? (tr.dataset.key || "__totals__") : (el.dataset.rk || "everything"),
+    tr ? (tr.querySelector("td.stick") || {}).textContent || "" : (el.dataset.label || "All time · everything"));
 }, true));
 
 function showPeople(kind, rowKey, label, sortBy = "date") {
