@@ -3344,9 +3344,8 @@ function render() {
   // the rest.
   const picked = selectedEntities();
   const scoped = scopeInfo(level());
-  renderKpis(picked.length ? sum(picked.flatMap((e) => e.src))
-    : scoped ? sum(scopeFor(level()))
-    : { ...t, leads: t.leads + u.leads, intro_calls: t.intro_calls + u.intro_calls,
+  // The tiles are always the whole account for the date range; ticking rows only changes the table below.
+  renderKpis({ ...t, leads: t.leads + u.leads, intro_calls: t.intro_calls + u.intro_calls,
         booked_calls: t.booked_calls + u.booked_calls,
         jobs: t.jobs + u.jobs, revenue: t.revenue + u.revenue }, picked.length, scoped);
   renderRangePill();
@@ -3360,6 +3359,10 @@ function render() {
   updateSegIndicator($("#utBySeg"));
   renderLast7();
   renderWeekSummary();
+  ROW_KEYS.set("account", [
+    ...scope.map((r) => `${r.date}|${r.ad_id}`),
+    ...(ROW_KEYS.get("u:__totals__") || []),
+  ]);
   ROW_KEYS.set("everything", [
     ...(ROW_KEYS.get("__totals__")   || []),
     ...(ROW_KEYS.get("u:__totals__") || []),
@@ -4650,10 +4653,10 @@ function renderKpis(t, picked = 0, scoped = null) {
   const tiles = phone ? phoneTiles : wideTiles;
   const what = { campaign: "campaigns", adset: "ad sets", ad: "ads" }[level()];
   const one = { campaign: "campaign", adset: "ad set", ad: "ad" }[level()];
-  // A tile opens the people behind its number: everything in the date range, or just the ticked / scoped rows
-  const tileScope = (picked || scoped) ? "__totals__" : "everything";
+  // A tile opens the people behind its number: everyone in the account for the date range
+  const tileScope = "account";
   const rangeTxt = capFirst(rangeLabel(state.range, windowDates()));
-  const tileLabel = picked ? `${rangeTxt} · ${picked} selected ${picked === 1 ? one : what}` : scoped ? `${rangeTxt} · ${scoped.text}` : rangeTxt;
+  const tileLabel = `${rangeTxt} · whole account`;
   $("#kpis").innerHTML = tiles.map((x) => {
     const open = x.kind && x.value !== "0" && x.value !== "—";
     return `
@@ -4664,11 +4667,12 @@ function renderKpis(t, picked = 0, scoped = null) {
     </div>`;
   }).join("");
   const next = { campaign: "Open the Ad Sets tab to see only theirs. ", adset: "Open the Ads tab to see only theirs. ", ad: "" }[level()];
-  $("#kpiNote").innerHTML = picked
-    ? `Showing ${picked} selected ${picked === 1 ? one : what}${scoped ? ` (in ${scoped.text})` : ""}. ${next}<button type="button" class="linklike" id="btnClearSel">Clear selection</button>.`
+  const all = "Top numbers are the whole account for the date range, including leads and calls from your website and other non-ad sources. ";
+  $("#kpiNote").innerHTML = all + (picked
+    ? `Table: ${picked} selected ${picked === 1 ? one : what}${scoped ? ` (in ${scoped.text})` : ""}, ad-attributed only. ${next}<button type="button" class="linklike" id="btnClearSel">Clear selection</button>.`
     : scoped
-      ? `Showing only ${what} in ${scoped.text}. Tick rows to narrow further, or <button type="button" class="linklike" id="btnClearScope">show all ${what}</button>.`
-      : `Showing all ${what}. Tick rows below to see just those${level() === "ad" ? "" : `, then open the ${level() === "campaign" ? "Ad Sets" : "Ads"} tab to see only theirs`}.`;
+      ? `Table: only ${what} in ${scoped.text}. Tick rows to narrow further, or <button type="button" class="linklike" id="btnClearScope">show all ${what}</button>.`
+      : `Table: all ${what}, ad-attributed only. Tick rows to see just those${level() === "ad" ? "" : `, then open the ${level() === "campaign" ? "Ad Sets" : "Ads"} tab to see only theirs`}.`);
 }
 
 /** The date pill beside the page title, e.g. "All time: 12/08/2026 - 05/10/2026". */
