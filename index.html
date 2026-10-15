@@ -202,8 +202,6 @@ button.ghost{background:transparent;box-shadow:none}
 .f select,.f input{min-width:150px}
 .f.narrow select,.f.narrow input{min-width:104px}
 .f.narrow select{max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#customWrap[hidden]{display:none}
-#fFrom.bad,#fTo.bad{border-color:var(--bad);outline:1px solid var(--bad)}
 
 /* ── KPI row ─────────────────────────────────────────────── */
 .kpis{display:grid;gap:10px;margin-bottom:14px;grid-template-columns:repeat(7,1fr)}
@@ -1371,25 +1369,6 @@ if (localStorage.getItem("santermedia.theme") === "dark") {
     </div>
     <div class="tbar">
       <div class="tbar-ctl">
-        <div class="f narrow">
-          <label for="fRange">Date range</label>
-          <select id="fRange">
-            <option value="today">Today</option>
-            <option value="yesterday">Yesterday</option>
-            <option value="7">Last 7 days</option>
-            <option value="lastweek">Last week</option>
-            <option value="30">Last 30 days</option>
-            <option value="mtd">Month to date</option>
-            <option value="all" selected>All time</option>
-            <option value="custom">Custom…</option>
-          </select>
-        </div>
-        <div class="f narrow" id="customWrap" hidden>
-          <label for="fFrom">From — To</label>
-          <span style="display:flex;gap:6px">
-            <input type="date" id="fFrom"><input type="date" id="fTo">
-          </span>
-        </div>
         <div class="f narrow">
           <label for="fCampaign">Campaign</label>
           <select id="fCampaign"><option value="ALL">All campaigns</option></select>
@@ -4716,9 +4695,7 @@ const RP_OPTS = [["today", "Today"], ["yesterday", "Yesterday"], ["7", "Last 7 d
 let rpPop = null;
 function applyRange(range, from, to) {
   state.range = range;
-  if (range === "custom") { state.from = from; state.to = to; $("#fFrom").value = from; $("#fTo").value = to; }
-  $("#fRange").value = range;
-  $("#customWrap").hidden = range !== "custom";
+  if (range === "custom") { state.from = from; state.to = to; }
   render();
 }
 function closeRangePop() { if (rpPop) { rpPop.remove(); rpPop = null; } }
@@ -4740,7 +4717,7 @@ function openRangePop(pill) {
     if (o) { applyRange(o.dataset.rp); closeRangePop(); return; }
     if (e.target.closest("#rpApply")) {
       let f = $("#rpFrom").value, t = $("#rpTo").value;
-      if (!f || !t) return;
+      if (!f || !t || f < "2000-01-01" || t > "2100-12-31") return;
       if (f > t) [f, t] = [t, f];
       applyRange("custom", f, t); closeRangePop();
     }
@@ -4889,8 +4866,6 @@ $("#glRange").addEventListener("click", (e) => {
   const b = e.target.closest("button[data-r]"); if (!b || b.dataset.r === state.range) return;
   const dir = GL_ORDER.indexOf(b.dataset.r) > GL_ORDER.indexOf(state.range) ? 1 : -1;
   state.range = b.dataset.r;
-  $("#fRange").value = state.range;
-  $("#customWrap").hidden = true;
   [...$("#glRange").querySelectorAll("button")].forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
   placeGlRange();                                   // the pill glides straight away
   const blocks = [...$("#glanceView").querySelectorAll(".gl-hero, .gl-card")];
@@ -5157,8 +5132,6 @@ $("#mcRange").addEventListener("click", (e) => {
   const b = e.target.closest("button[data-r]"); if (!b || b.dataset.r === state.range) return;
   const dir = GL_ORDER.indexOf(b.dataset.r) > GL_ORDER.indexOf(state.range) ? 1 : -1;
   state.range = b.dataset.r;
-  $("#fRange").value = state.range;
-  $("#customWrap").hidden = true;
   [...$("#mcRange").querySelectorAll("button")].forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
   placeGlRange();
   const body = $("#mCampBody");
@@ -5897,29 +5870,6 @@ function exportCSV() {
 }
 
 /* ═══════════ Events ═══════════════════════════════════════════ */
-$("#fRange").addEventListener("change", (e) => {
-  state.range = e.target.value;
-  $("#customWrap").hidden = state.range !== "custom";
-  if (state.range === "custom" && !state.from) {
-    $("#fFrom").value = state.from = offset(-29);
-    $("#fTo").value   = state.to   = offset(0);
-  }
-  render();
-});
-/* Typing a date fires a change at every keystroke (year 0002, 0020, 0202 …), so wait for a complete, sensible From and To before applying. */
-let customDatesTimer = null;
-function applyCustomDates() {
-  const f = $("#fFrom").value, t = $("#fTo").value;
-  const ok = (v) => /^\d{4}-\d{2}-\d{2}$/.test(v) && v >= "2000-01-01" && v <= "2100-12-31";
-  const bad = !ok(f) || !ok(t) || f > t;
-  $("#fFrom").classList.toggle("bad", bad); $("#fTo").classList.toggle("bad", bad);
-  $("#fFrom").title = $("#fTo").title = bad ? "Choose a From date that is on or before the To date" : "";
-  if (bad) return;
-  state.from = f; state.to = t; render();
-}
-const customDatesChanged = () => { clearTimeout(customDatesTimer); customDatesTimer = setTimeout(applyCustomDates, 400); };
-$("#fFrom").addEventListener("change", customDatesChanged);
-$("#fTo").addEventListener("change", customDatesChanged);
 $("#fCampaign").addEventListener("change", (e) => {
   state.campaign = e.target.value;
   state.adset = "ALL";               // ad-set list depends on the campaign
