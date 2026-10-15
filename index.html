@@ -203,6 +203,7 @@ button.ghost{background:transparent;box-shadow:none}
 .f.narrow select,.f.narrow input{min-width:104px}
 .f.narrow select{max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #customWrap[hidden]{display:none}
+#fFrom.bad,#fTo.bad{border-color:var(--bad);outline:1px solid var(--bad)}
 
 /* ── KPI row ─────────────────────────────────────────────── */
 .kpis{display:grid;gap:10px;margin-bottom:14px;grid-template-columns:repeat(7,1fr)}
@@ -3078,7 +3079,8 @@ function sum(rows) {
 }
 
 /* ═══════════ Filtering & grouping ═════════════════════════════ */
-function iso(d) { return d.toISOString().slice(0, 10); }
+// Local calendar date (toISOString is UTC, which gave yesterday's date in the first hour after midnight in the UK, and tomorrow's in the evening in the US)
+function iso(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; }
 function offset(days) { const d = new Date(); d.setDate(d.getDate() + days); return iso(d); }
 
 /** Resolves a `<select id="*Range">` value to a { from, to } window. Shared
@@ -5885,8 +5887,20 @@ $("#fRange").addEventListener("change", (e) => {
   }
   render();
 });
-$("#fFrom").addEventListener("change", (e) => { state.from = e.target.value; render(); });
-$("#fTo").addEventListener("change",   (e) => { state.to   = e.target.value; render(); });
+/* Typing a date fires a change at every keystroke (year 0002, 0020, 0202 …), so wait for a complete, sensible From and To before applying. */
+let customDatesTimer = null;
+function applyCustomDates() {
+  const f = $("#fFrom").value, t = $("#fTo").value;
+  const ok = (v) => /^\d{4}-\d{2}-\d{2}$/.test(v) && v >= "2000-01-01" && v <= "2100-12-31";
+  const bad = !ok(f) || !ok(t) || f > t;
+  $("#fFrom").classList.toggle("bad", bad); $("#fTo").classList.toggle("bad", bad);
+  $("#fFrom").title = $("#fTo").title = bad ? "Choose a From date that is on or before the To date" : "";
+  if (bad) return;
+  state.from = f; state.to = t; render();
+}
+const customDatesChanged = () => { clearTimeout(customDatesTimer); customDatesTimer = setTimeout(applyCustomDates, 400); };
+$("#fFrom").addEventListener("change", customDatesChanged);
+$("#fTo").addEventListener("change", customDatesChanged);
 $("#fCampaign").addEventListener("change", (e) => {
   state.campaign = e.target.value;
   state.adset = "ALL";               // ad-set list depends on the campaign
