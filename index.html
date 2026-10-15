@@ -2397,6 +2397,7 @@ function parseLeads(text, ref) {
 
   const cell = (r, n) => (n >= 0 ? String(r[n] ?? "").trim() : "");
   let seen = new Map(), noAd = 0, noDate = 0;
+  const allRecs = [], occCount = new Map();   // every opt-in row, in sheet order
 
   grid.slice(1).forEach((r) => {
     const email = cell(r, i.email).toLowerCase();
@@ -2413,6 +2414,9 @@ function parseLeads(text, ref) {
       amount:    i.amount    >= 0 ? toNum(r[i.amount])    : 0,
       flag:      /^(y|yes|true|1|won|closed)/i.test(cell(r, i.flag)),
     };
+    // The n-th opt-in with this exact email and day (so two identical rows get distinct keys)
+    const dk = `${email}|${date}`; rec.occ = occCount.get(dk) || 0; occCount.set(dk, rec.occ + 1);
+    rec._i = allRecs.length; allRecs.push(rec);
     // Attribution = which touch a repeated email is credited to.
     const key = email || `${date}|${adId}|${seen.size}`;
     const prev = seen.get(key);
@@ -2428,7 +2432,13 @@ function parseLeads(text, ref) {
   // else keyed by person joins through this.
   leadIndex = new Map();
   const agg = new Map();
-  [...seen.values()].forEach((L) => {
+  // Every opt-in row counts as a lead. One row per email stays the "main" lead that calls, purchases and the
+  // survey attach to (chosen by the attribution rule above); the other rows are repeat opt-ins, counted as leads
+  // of their own day and ad but carrying no calls or sales.
+  const mainIdx = new Set([...seen.values()].map((L) => L._i));
+  const extras = allRecs.filter((L) => L.email && !mainIdx.has(L._i));
+  [...seen.values(), ...extras].forEach((L) => {
+    const repeat = !!L.email && !mainIdx.has(L._i);
     const par = (ref && ref.parent.get(L.adId)) || {};
     const cid = par.campaign_id || L.campaign_id || "";
     const aid = par.adset_id    || L.adset_id    || "";
@@ -2443,18 +2453,18 @@ function parseLeads(text, ref) {
     if (!e) { e = { date: L.date, ad_id: L.adId, campaign_id: cid, adset_id: aid,
                     tracked, source, leads: 0, jobs: 0, revenue: 0 }; agg.set(k, e); }
     if (tracked) e.leads += 1;
-    if (!hasPurchTab) {
+    if (!hasPurchTab && !repeat) {
       e.jobs  += L.purchases || (L.flag ? 1 : 0);
       e.revenue += L.amount;
     }
-    if (L.email) leadIndex.set(L.email,
+    if (L.email && !repeat) leadIndex.set(L.email,
       { date: L.date, adId: L.adId, campaign_id: cid, adset_id: aid, tracked, source });
     const pk = tracked ? `${L.date}|${L.adId}`
                        : addUntracked(L.date,
                            { ad_id: L.adId, adset_id: L.adset_id, campaign_id: L.campaign_id },
                            { leads: 1 });
     const person = {
-      name: L.name, email: L.email, date: L.date,
+      name: L.name, email: L.email, date: L.date, occ: L.occ, repeat,
       tracked, source,
       campaign_name: tracked ? named("campaign", cid) : "",
       adset_name:    tracked ? named("adset",    aid) : "",
@@ -2465,14 +2475,14 @@ function parseLeads(text, ref) {
       ltvAmount: 0, ltvCount: 0, ltvPurchases: [],
     };
     allLeads.push(person);
-    if (L.email) leadByEmail.set(L.email, person);
+    if (L.email && !repeat) leadByEmail.set(L.email, person);
     pushPerson("leads", pk, { name: L.name, email: L.email, date: L.date });
-    const closes = hasPurchTab ? 0 : (L.purchases || (L.flag ? 1 : 0));
+    const closes = (hasPurchTab || repeat) ? 0 : (L.purchases || (L.flag ? 1 : 0));
     if (closes > 0)
       pushPerson("closes", pk, { name: L.name, email: L.email, date: L.date,
                                  count: closes, amount: L.amount });
   });
-  leadStats = { total: seen.size, rows: grid.length - 1, noAd, noDate, keys: agg.size };
+  leadStats = { total: seen.size + extras.length, people: seen.size, repeats: extras.length, rows: grid.length - 1, noAd, noDate, keys: agg.size };
   return [...agg.values()];
 }
 let leadStats = null;
@@ -4944,7 +4954,7 @@ function dayHead(iso) {
   if (iso === isoStep(t, -1)) return "Yesterday";
   return dateFromYMD(iso).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
 }
-const leadKey = (p) => String(p.email || p.name || "").toLowerCase() + "|" + (p.date || "");
+const leadKey = (p) => String(p.email || p.name || "").toLowerCase() + "|" + (p.date || "") + (p.occ ? "#" + p.occ : "");
 const leadCache = new Map();   // last known people: a tap during a refresh (list briefly empty) still resolves
 const leadByKey = (k) => allLeads.find((p) => leadKey(p) === k) || leadCache.get(k);
 const sortedLeads = () => allLeads.map((p, i) => ({ p, i }))
@@ -6182,7 +6192,7 @@ function ingestSummary() {
          ${refCounts.adset} ad set, ${refCounts.ad} ad name${refCounts.ad === 1 ? "" : "s"}`
       : `<br>No reference sheet — rows will show raw IDs.`) +
     (leadStats
-      ? `<br><span class="ok">Leads:</span> ${leadStats.total} unique of ${leadStats.rows} rows` +
+      ? `<br><span class="ok">Leads:</span> ${leadStats.total} opt-ins from ${leadStats.rows} rows (${leadStats.people} different people)` +
         (leadStats.noAd   ? ` · <span class="warn">${leadStats.noAd} with no Ad ID</span>` : "") +
         (leadStats.noDate ? ` · ${leadStats.noDate} with no date` : "") +
         (leadStats.orphan ? ` · <span class="warn">${leadStats.orphan} skipped (Ad ID not in reference)</span>` : "")
