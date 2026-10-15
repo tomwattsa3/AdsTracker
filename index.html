@@ -2514,6 +2514,20 @@ function pushPerson(kind, key, rec) {
   m.get(key).push(rec);
 }
 
+/** Where a call row says the person came from ("Website", "ig" …), for calls whose person
+    isn't on the Leads tab. Plain numeric IDs are ignored; a source seen on one of a person's rows
+    (e.g. their intro call) is reused for their other rows (their demo call). */
+const callSourceByEmail = new Map();
+function callRowSource(r, head, email) {
+  const col = (names) => head.findIndex((h) => names.includes(h));
+  const vals = [col(["campaignname", "campaign"]), col(["adset", "adsetname"]), col(["adname", "ad"])]
+    .map((i) => (i >= 0 ? String(r[i] ?? "").trim() : ""))
+    .filter((v) => v && !/^\d{8,}$/.test(v));
+  const uniq = [...new Set(vals.map((v) => v.toLowerCase()))].map((l) => vals.find((v) => v.toLowerCase() === l));
+  const label = uniq[0] || "";   // the campaign column comes first: "ig", "Website" … the same words the Leads tab uses
+  if (label) callSourceByEmail.set(email, label);
+  return label || callSourceByEmail.get(email) || "";
+}
 const CALL_ALIAS = {
   date:   ["datebookedhomevisit","datebookedcall","datebooked","bookeddate","calldate","date"],
   email:  ["emailaddress","email"],
@@ -2541,11 +2555,13 @@ function parseCalls(text) {
     if (!email) { noEmail++; return; }
     const bookedOn = iDate >= 0 ? String(r[iDate] ?? "").trim() : "";
     const L = leadIndex && leadIndex.get(email);
+    const rowSrc = callRowSource(r, head, email);
     if (!L) {
-      // No lead at all — still a real booked call, just one with nothing to
-      // attribute it to. Counted, not dropped.
+      // No lead at all — still a real booked call. Filed under the source the row (or the person's intro
+      // row) names, e.g. Website; otherwise nothing to attribute it to. Counted, not dropped.
       unmatched++;
-      const noInfo = { ad_id: "No lead match", adset_id: "No lead match", campaign_id: "No lead match" };
+      const src = rowSrc || "No lead match";
+      const noInfo = { ad_id: src, adset_id: src, campaign_id: src };
       const k = addUntracked(tidyDate(bookedOn) || "—", noInfo, { booked_calls: 1 });
       pushPerson("calls", k, {
         name: iName >= 0 ? String(r[iName] ?? "").trim() : "",
@@ -2597,17 +2613,20 @@ function parseIntroCalls(text) {
 
   const iName = head.findIndex((h) => h === "name");
   const agg = new Map();
+  callSourceByEmail.clear();
   let matched = 0, unmatched = 0, noEmail = 0;
   grid.slice(1).forEach((r) => {
     const email = String(r[iEmail] ?? "").trim().toLowerCase();
     if (!email) { noEmail++; return; }
     const bookedOn = iDate >= 0 ? String(r[iDate] ?? "").trim() : "";
     const L = leadIndex && leadIndex.get(email);
+    const rowSrc = callRowSource(r, head, email);
     if (!L) {
-      // No lead at all — still a real intro call, just one with nothing to
-      // attribute it to. Counted, not dropped.
+      // No lead at all — still a real intro call. If the row says where it came from (Website, ig …) it is
+      // filed under that source; otherwise it has nothing to attribute it to. Counted, not dropped.
       unmatched++;
-      const noInfo = { ad_id: "No lead match", adset_id: "No lead match", campaign_id: "No lead match" };
+      const src = rowSrc || "No lead match";
+      const noInfo = { ad_id: src, adset_id: src, campaign_id: src };
       const k = addUntracked(tidyDate(bookedOn) || "—", noInfo, { intro_calls: 1 });
       pushPerson("intro", k, {
         name: iName >= 0 ? String(r[iName] ?? "").trim() : "",
