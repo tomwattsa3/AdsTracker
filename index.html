@@ -1001,7 +1001,9 @@ td.cell-pos,td.cell-neg{font-weight:500}
 .m-tile.t-leads{background:var(--grp-leads)}.m-tile.t-leads span{color:var(--gi-leads)}
 .m-tile.t-calls{background:var(--grp-calls)}.m-tile.t-calls span{color:var(--gi-calls)}
 .m-tile.t-intro{background:var(--grp-intro)}.m-tile.t-intro span{color:var(--gi-intro)}
-.gl-range#mcRange{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));width:100%;margin-bottom:14px}
+.gl-range#mcRange{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) 46px;width:100%;margin-bottom:14px}
+.gl-range button[data-r="more"]{display:flex;align-items:center;justify-content:center;padding:0 11px}
+.gl-range#mcRange button[data-r="more"]{padding:0}
 #mcRange button{padding:0}
 .m-tile.p{padding:9px 9px 8px;gap:3px}
 .m-tile.p b{font-size:17px}
@@ -1117,6 +1119,20 @@ td.cell-pos,td.cell-neg{font-weight:500}
 .sh-step.done .sh-st b{color:var(--ink)}
 .sh-st small{font-size:12px;color:var(--muted)}
 /* Ad sheet: the leads behind one ad, with their survey answers */
+.gl-tile[data-pk],.m-tile[data-pk]{cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.gl-tile[data-pk]:active,.m-tile[data-pk]:active{transform:scale(.97)}
+.rs-list{display:grid;gap:2px;margin-bottom:14px}
+.rs-opt{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:48px;border:0;background:transparent;box-shadow:none;text-align:left;
+  padding:0 12px;border-radius:12px;font-size:15px;color:var(--ink)}
+.rs-opt[aria-checked="true"]{background:var(--sunk-2);font-weight:600}
+.rs-opt[aria-checked="true"]::after{content:"✓";color:var(--accent)}
+.rs-custom{background:var(--sunk);border-radius:16px;padding:14px;display:grid;gap:10px}
+.rs-custom.on{box-shadow:inset 0 0 0 1.5px var(--accent)}
+.rs-custom.bad{box-shadow:inset 0 0 0 1.5px var(--bad)}
+.rs-dates{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rs-dates label{display:grid;gap:4px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);min-width:0}
+.rs-dates input{width:100%;min-width:0;min-height:44px;font-size:15px}
+.rs-custom .primary{min-height:46px;font-size:15px;border-radius:12px}
 .as-title{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
 .as-title b{font-size:16px;font-weight:600;line-height:1.3;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .as-title .m-eyebrow.up{color:var(--muted)}
@@ -1277,6 +1293,7 @@ if (localStorage.getItem("santermedia.theme") === "dark") {
     <button data-r="7" aria-pressed="false">7 days</button>
     <button data-r="30" aria-pressed="false">30 days</button>
     <button data-r="all" aria-pressed="true">All time</button>
+    <button data-r="more" data-range-pill aria-pressed="false" aria-label="Pick other dates" title="Other dates"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></button>
   </div>
   <div id="mCampBody"></div>
 </div>
@@ -1327,6 +1344,7 @@ if (localStorage.getItem("santermedia.theme") === "dark") {
       <button data-r="7" aria-pressed="false">7 days</button>
       <button data-r="30" aria-pressed="false">30 days</button>
       <button data-r="all" aria-pressed="true">All time</button>
+      <button data-r="more" data-range-pill aria-pressed="false" aria-label="Pick other dates" title="Other dates"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></button>
     </div>
   </div>
   <section class="gl-hero" id="glHero"></section>
@@ -3115,7 +3133,7 @@ function windowDates() { return resolveWindow(state.range, state.from, state.to)
 /** Human label for a *Range value, paired with resolveWindow(). */
 function rangeLabel(range, w) {
   if (range === "all")       return "all time";
-  if (range === "custom")    return `${w.from} → ${w.to}`;
+  if (range === "custom")    return `${fmtDate(w.from)} – ${fmtDate(w.to)}`;
   if (range === "mtd")       return "month to date";
   if (range === "today")     return "today";
   if (range === "yesterday") return "yesterday";
@@ -4735,13 +4753,16 @@ function openRangePop(pill) {
 }
 document.addEventListener("click", (e) => {
   const pill = e.target.closest("[data-range-pill]");
-  if (pill) { rpPop ? closeRangePop() : openRangePop(pill); return; }
+  if (pill) {
+    if (matchMedia("(max-width:700px)").matches) { closeRangePop(); openRangeSheet(); return; }
+    rpPop ? closeRangePop() : openRangePop(pill); return;
+  }
   if (rpPop && !e.target.closest(".rp-pop")) closeRangePop();
 });
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") closeRangePop();
   const pill = e.target.closest && e.target.closest("[data-range-pill]");
-  if (pill && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); rpPop ? closeRangePop() : openRangePop(pill); }
+  if (pill && pill.tagName !== "BUTTON" && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); rpPop ? closeRangePop() : openRangePop(pill); }
 });
 addEventListener("resize", closeRangePop);
 $("#kpis").addEventListener("keydown", (e) => {
@@ -4797,10 +4818,10 @@ function renderGlance() {
   const t = glanceTotals(w.from, w.to), m = metrics(t);
   const pw = prevWindow(w);
   const pt = pw ? glanceTotals(pw.from, pw.to) : null, pm = pt ? metrics(pt) : null;
-  const when = { all: "All time", today: "Today", yesterday: "Yesterday", lastweek: "Last week", mtd: "This month", custom: "Custom range" }[state.range] || `Last ${state.range} days`;
+  const when = { all: "All time", today: "Today", yesterday: "Yesterday", lastweek: "Last week", mtd: "This month", custom: `${fmtDate(w.from)} – ${fmtDate(w.to)}` }[state.range] || `Last ${state.range} days`;
   $("#glSub").textContent = when + (pw ? ", compared with the period before" : "") +
     (lastRefreshAt ? " · updated " + new Date(lastRefreshAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }) : "");
-  [...$("#glRange").querySelectorAll("button")].forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.r === state.range)));
+  [...$("#glRange").querySelectorAll("button")].forEach((b) => b.setAttribute("aria-pressed", String(pillOn(b, state.range))));
   placeGlRange();
 
   const km = (n) => state.currency + (n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, "") + "k" : Math.round(n));
@@ -4813,7 +4834,7 @@ function renderGlance() {
     { l: "Sales", v: fmt(t.jobs), dl: glanceDeltaShort(t.jobs, pt && pt.jobs, "up"), d: per(t.jobs, m.cpjob, "sale"), c: "t-sales" },
   ];
   $("#glHero").innerHTML = tiles.map((x) =>
-    `<div class="gl-tile ${x.c}"><span class="l">${x.l}</span><span class="v">${x.v}</span><span class="d">${x.d}</span>${x.dl}</div>`).join("");
+    `<div class="gl-tile ${x.c}"${PS_BY_LABEL[x.l] ? ` data-pk="${PS_BY_LABEL[x.l]}" role="button" tabindex="0"` : ""}><span class="l">${x.l}</span><span class="v">${x.v}</span><span class="d">${x.d}</span>${x.dl}</div>`).join("");
 
   const pi = (a, b) => (b > 0 ? Math.round((a / b) * 100) + "%" : "—");
   const steps = [
@@ -4863,6 +4884,8 @@ function renderGlance() {
   }).join("") : '<div class="empty" style="padding:24px 0">No campaigns in this range.</div>';
 }
 const GL_ORDER = ["today", "7", "30", "all"];
+/* The calendar button lights up when the range is anything other than the four quick pills (Yesterday, Last week, a custom range …) */
+const pillOn = (b, range) => b.dataset.r === "more" ? !GL_ORDER.includes(range) : b.dataset.r === range;
 function placeGlRange() {   // slide the selected-pill indicator under the active button, on every date-pill group
   document.querySelectorAll(".gl-range").forEach((seg) => {
     const on = seg.querySelector('button[aria-pressed="true"]'), ind = seg.querySelector(".seg-indicator");
@@ -4873,7 +4896,7 @@ function placeGlRange() {   // slide the selected-pill indicator under the activ
 }
 addEventListener("resize", placeGlRange);
 $("#glRange").addEventListener("click", (e) => {
-  const b = e.target.closest("button[data-r]"); if (!b || b.dataset.r === state.range) return;
+  const b = e.target.closest("button[data-r]"); if (!b || b.dataset.r === "more" || b.dataset.r === state.range) return;
   const dir = GL_ORDER.indexOf(b.dataset.r) > GL_ORDER.indexOf(state.range) ? 1 : -1;
   state.range = b.dataset.r;
   [...$("#glRange").querySelectorAll("button")].forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
@@ -4890,7 +4913,12 @@ $("#glRange").addEventListener("click", (e) => {
   }, 120);
 });
 $("#glanceView").addEventListener("click", (e) => {
-  const b = e.target.closest("[data-go]"); if (b) setPage(b.dataset.go);
+  const b = e.target.closest("[data-go]"); if (b) { setPage(b.dataset.go); return; }
+  const t = e.target.closest("[data-pk]"); if (t) openPeopleSheet(t.dataset.pk, null);
+});
+$("#glanceView").addEventListener("keydown", (e) => {
+  const t = e.target.closest && e.target.closest("[data-pk]");
+  if (t && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openPeopleSheet(t.dataset.pk, null); }
 });
 
 /* ═══════════ Installable web app (Android Chrome + iOS home screen) ═══ */
@@ -4982,7 +5010,7 @@ function leadSheetHTML(p) {
   const step = (label, when, done, side = "") =>
     `<div class="sh-step${done ? " done" : ""}"><div class="sh-dot"><i></i><u></u></div><div class="sh-st"><b>${label}</b><small>${esc(when)}</small></div>${side ? `<span class="sh-side">${esc(side)}</span>` : ""}</div>`;
   const survey = SURVEY_FIELDS.map(([label, test]) => `<div><dt>${label}</dt>${surveyValueHTML(label, surveyAnswerFor(p, test))}</div>`).join("");
-  return (leadFromAd ? `<button type="button" class="m-back" data-sheet-back style="margin-bottom:6px"><svg width="18" height="18" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" style="transform:rotate(180deg)"><path d="M4.5 2.5 8 6l-3.5 3.5"/></svg>Back to ad</button>` : "") + `<div class="sh-head">
+  return ((leadFromAd || leadFromPeople) ? `<button type="button" class="m-back" data-sheet-back style="margin-bottom:6px"><svg width="18" height="18" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" style="transform:rotate(180deg)"><path d="M4.5 2.5 8 6l-3.5 3.5"/></svg>${leadFromPeople ? "Back to list" : "Back to ad"}</button>` : "") + `<div class="sh-head">
       <span class="av lg" style="background:${av[0]};color:${av[1]}">${esc(initialsOf(nm))}</span>
       <div class="sh-who"><b>${esc(nm)}</b><span class="chip" style="background:${st.bg};color:${st.ink}">${st.t}</span></div>
       <button type="button" class="sh-close" data-sheet-close aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
@@ -5004,7 +5032,8 @@ function leadSheetHTML(p) {
 }
 function openLeadSheet(p, fromAd) {
   if (!p) return;
-  leadFromAd = !!fromAd && adSheet.id !== null;
+  leadFromPeople = !!fromAd && peopleSheetShown;
+  leadFromAd = !!fromAd && !peopleSheetShown && adSheet.id !== null;
   adSheetShown = false; shownLeadKey = leadKey(p);
   showSheet(leadSheetHTML(p));
 }
@@ -5018,10 +5047,11 @@ function showSheet(html) {
   sh.classList.add("on"); $("#sheetScrim").classList.add("on");
   document.body.style.overflow = "hidden";
 }
+function showRsHint() { const c = document.querySelector(".rs-custom"); if (c) c.classList.add("bad"); }
 function closeLeadSheet() {
   const sh = $("#leadSheet");
   if (!sh || !sh.classList.contains("on")) return;
-  shownLeadKey = null;
+  shownLeadKey = null; peopleSheetShown = false; leadFromPeople = false;
   sh.classList.remove("on", "dragging");
   sh.style.transform = "";
   $("#sheetScrim").classList.remove("on");
@@ -5031,7 +5061,20 @@ function closeLeadSheet() {
 $("#sheetScrim").addEventListener("click", closeLeadSheet);
 $("#leadSheet").addEventListener("click", (e) => {
   if (e.target.closest("[data-sheet-close]")) { closeLeadSheet(); return; }
-  if (e.target.closest("[data-sheet-back]")) { leadFromAd = false; adSheetShown = true; shownLeadKey = null; showSheet(adSheetHTML()); return; }
+  if (e.target.closest("[data-sheet-back]")) {
+    shownLeadKey = null;
+    if (leadFromPeople) { leadFromPeople = false; peopleSheetShown = true; showSheet(peopleSheetHTML()); }
+    else { leadFromAd = false; adSheetShown = true; showSheet(adSheetHTML()); }
+    return;
+  }
+  const rs = e.target.closest("[data-rs]");
+  if (rs) { applyRange(rs.dataset.rs); closeLeadSheet(); return; }
+  if (e.target.closest("#rsApply")) {
+    let f = $("#rsFrom").value, t = $("#rsTo").value;
+    if (!f || !t || f < "2000-01-01" || t > "2100-12-31") { showRsHint(); return; }
+    if (f > t) [f, t] = [t, f];
+    applyRange("custom", f, t); closeLeadSheet(); return;
+  }
   const f = e.target.closest("[data-adf]");
   if (f) { adSheet.f = f.dataset.adf; showSheet(adSheetHTML()); }
 });
@@ -5087,13 +5130,14 @@ let mCampSel = null;
 const mTile = (label, value, cls) => `<div class="m-tile ${cls}"><span>${label}</span><b>${value}</b></div>`;
 const mKm = (n) => state.currency + (n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, "") + "k" : Math.round(n));
 const mPer = (cost, n, unit) => (n ? mKm(cost / n) + "/" + unit : "—/" + unit);
-const mTileP = (label, value, sub, cls) => `<div class="m-tile p ${cls}"><span>${label}</span><b>${value}</b><small>${sub || "&nbsp;"}</small></div>`;
+const PS_BY_LABEL = { Leads: "leads", Intros: "intro", Demos: "calls", Sales: "closes" };
+const mTileP = (label, value, sub, cls) => `<div class="m-tile p ${cls}"${PS_BY_LABEL[label] ? ` data-pk="${PS_BY_LABEL[label]}" role="button" tabindex="0"` : ""}><span>${label}</span><b>${value}</b><small>${sub || "&nbsp;"}</small></div>`;
 const mStrip = (t) => `<div class="m-tiles" style="--n:4;gap:6px">${mTileP("Spend", t.cost >= 10000 ? mKm(t.cost) : cur(t.cost), "", "t-traffic")}${mTileP("Leads", fmt(t.leads), mPer(t.cost, t.leads, "lead"), "t-leads")}${mTileP("Intros", fmt(t.intro_calls), mPer(t.cost, t.intro_calls, "intro"), "t-intro")}${mTileP("Demos", fmt(t.booked_calls), mPer(t.cost, t.booked_calls, "demo"), "t-calls")}</div>`;
 const mCols = (c) => `<div class="m-stats four"><div><span>Spend</span><b>${cur(c.cost)}</b><small>&nbsp;</small></div><div><span>Leads</span><b>${fmt(c.leads)}</b><small>${mPer(c.cost, c.leads, "lead")}</small></div><div><span>Intros</span><b>${fmt(c.intro_calls)}</b><small>${mPer(c.cost, c.intro_calls, "intro")}</small></div><div><span>Demos</span><b${c.booked_calls ? "" : ' class="zero"'}>${fmt(c.booked_calls)}</b><small>${mPer(c.cost, c.booked_calls, "demo")}</small></div></div>`;
 function renderMCamp() {
   const el = $("#mCampView"); if (!el) return;
   const top = $("#mCampTop"), body = $("#mCampBody");
-  [...$("#mcRange").querySelectorAll("button")].forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.r === state.range)));
+  [...$("#mcRange").querySelectorAll("button")].forEach((b) => b.setAttribute("aria-pressed", String(pillOn(b, state.range))));
   placeGlRange();
   if (loadingData && !state.rows.length) {
     top.innerHTML = `<div class="m-head"><span class="m-eyebrow">Loading</span><h1 class="page-title">Campaigns</h1></div>`;
@@ -5139,7 +5183,7 @@ function renderMCamp() {
 }
 /* Date pills inside Campaigns: the same range as At a glance, so changing it here changes it there too */
 $("#mcRange").addEventListener("click", (e) => {
-  const b = e.target.closest("button[data-r]"); if (!b || b.dataset.r === state.range) return;
+  const b = e.target.closest("button[data-r]"); if (!b || b.dataset.r === "more" || b.dataset.r === state.range) return;
   const dir = GL_ORDER.indexOf(b.dataset.r) > GL_ORDER.indexOf(state.range) ? 1 : -1;
   state.range = b.dataset.r;
   [...$("#mcRange").querySelectorAll("button")].forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
@@ -5156,6 +5200,8 @@ $("#mcRange").addEventListener("click", (e) => {
   }, 120);
 });
 $("#mCampView").addEventListener("click", (e) => {
+  const pk = e.target.closest("[data-pk]");
+  if (pk) { openPeopleSheet(pk.dataset.pk, mCampSel); return; }
   const ad = e.target.closest("[data-ad]");
   if (ad) { openAdSheet(ad.dataset.ad); return; }
   const c = e.target.closest("[data-camp]");
@@ -5164,9 +5210,68 @@ $("#mCampView").addEventListener("click", (e) => {
 });
 
 $("#mCampView").addEventListener("keydown", (e) => {
+  const pk = e.target.closest && e.target.closest("[data-pk]");
+  if (pk && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openPeopleSheet(pk.dataset.pk, mCampSel); return; }
   const ad = e.target.closest && e.target.closest("[data-ad]");
   if (ad && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openAdSheet(ad.dataset.ad); }
 });
+
+/* — Date sheet: every preset plus a custom From / To, for the phone — */
+function openRangeSheet() {
+  const w = windowDates(), ds = state.rows.map((r) => r.date).filter(Boolean).sort();
+  const from = state.range === "all" ? (ds[0] || "") : w.from, to = state.range === "all" ? (ds[ds.length - 1] || "") : w.to;
+  const opts = RP_OPTS.map(([v, l]) => `<button type="button" class="rs-opt" data-rs="${v}" aria-checked="${state.range === v}">${l}</button>`).join("");
+  adSheetShown = false; shownLeadKey = null; leadFromAd = false; leadFromPeople = false;
+  showSheet(`<div class="sh-head"><div class="as-title"><b>Choose dates</b></div>
+      <button type="button" class="sh-close" data-sheet-close aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div class="rs-list" role="radiogroup">${opts}</div>
+    <div class="rs-custom${state.range === "custom" ? " on" : ""}"><b>Pick your own dates</b>
+      <div class="rs-dates"><label>From<input type="date" id="rsFrom" value="${from}"></label><label>To<input type="date" id="rsTo" value="${to}"></label></div>
+      <button type="button" class="primary" id="rsApply">Show these dates</button></div>`);
+}
+
+/* — People sheet: tap Leads / Intros / Demos / Sales to see who they are — */
+const PS_KIND = { leads: ["Leads", "Opted in"], intro: ["Intro calls", "Intro call"], calls: ["Demo calls", "Demo call"], closes: ["Sales", "Purchased"] };
+const peopleSheet = { kind: null, scope: null };
+let leadFromPeople = false;
+function peopleSheetRows() {
+  const { kind, scope } = peopleSheet, w = windowDates();
+  const inWin = (d) => d >= w.from && d <= w.to;
+  let recs = [];
+  if (scope) {
+    const keys = new Set(filtered().filter((r) => r.campaign_id === scope).map((r) => `${r.date}|${r.ad_id}`));
+    keys.forEach((k) => (people[kind].get(k) || []).forEach((r) => recs.push(r)));
+  } else {
+    // only the real (date | ad) buckets: the daily and weekly tables register their own "day:" / "week:" copies
+    people[kind].forEach((list, k) => { if (k.includes("|")) list.forEach((r) => { if (inWin(normDate(r.date) || r.date || "")) recs.push(r); }); });
+  }
+  return recs.sort((a, b) => String(b.date).localeCompare(String(a.date)) || String(a.name).localeCompare(String(b.name)));
+}
+function peopleSheetHTML() {
+  const { kind } = peopleSheet, [title, verb] = PS_KIND[kind];
+  const recs = peopleSheetRows(), w = windowDates();
+  const label = capFirst(rangeLabel(state.range, w));
+  const card = (r) => {
+    const p = leadByEmail.get(String(r.email || "").toLowerCase()), nm = r.name || (p && p.name) || r.email || "?";
+    const st = p ? leadStatus(p) : { t: verb, bg: "var(--sunk-2)", ink: "var(--ink-2)" };
+    const ad = p ? (leadAd(p) !== "—" ? leadAd(p) : leadCampaign(p)) : "Not on the Leads tab";
+    const bits = [kind === "leads" ? "Opted in " + (dayText(r.date) || "") : verb + " " + (dayText(r.booked || r.purchased || r.date) || "")];
+    if (kind === "closes" && r.amount) bits.push(cur(r.amount));
+    const body = `<div class="as-l1"><b>${esc(nm)}</b><span class="chip" style="background:${st.bg};color:${st.ink}">${st.t}</span></div>
+      <div class="as-l2">${esc(bits.join(" · "))}</div><div class="as-l3"><span>${esc(ad && ad !== "—" ? ad : "No ad")}</span></div>`;
+    return p ? `<button type="button" class="as-lead" data-lead="${esc(leadKey(p))}">${body}</button>` : `<div class="as-lead">${body}</div>`;
+  };
+  return `<div class="sh-head"><div class="as-title"><span class="m-eyebrow up">${esc(label)}</span><b>${title} · ${fmt(recs.length)}</b></div>
+      <button type="button" class="sh-close" data-sheet-close aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    ${loadingData && !allLeads.length ? '<div class="as-empty">Loading…</div>' : recs.length ? recs.map(card).join("") : `<div class="as-empty">No ${title.toLowerCase()} in this range.</div>`}`;
+}
+function openPeopleSheet(kind, scope) {
+  if (matchMedia("(min-width:701px)").matches) { showPeople(kind, scope ? `campaign:${scope}` : "account", capFirst(rangeLabel(state.range, windowDates())) + (scope ? "" : " · whole account")); return; }
+  peopleSheet.kind = kind; peopleSheet.scope = scope || null;
+  adSheetShown = false; shownLeadKey = null; leadFromAd = false; leadFromPeople = false; peopleSheetShown = true;
+  showSheet(peopleSheetHTML());
+}
+let peopleSheetShown = false;
 
 /* — Ad sheet: slides up with the leads behind one ad — */
 const adSheet = { id: null, f: "all" };
@@ -5195,13 +5300,14 @@ function adSheetHTML() {
     <div class="m-chips" id="adChips">${chips}</div>
     ${loadingData && !allLeads.length ? '<div class="as-empty">Loading leads…</div>' : list.length ? list.map(card).join("") : `<div class="as-empty">${adSheet.f === "booked" ? "Nobody from this ad has booked a call in this range." : "No leads from this ad in this range."}</div>`}`;
 }
-function openAdSheet(id) { adSheet.id = id; adSheet.f = "all"; leadFromAd = false; adSheetShown = true; shownLeadKey = null; showSheet(adSheetHTML()); }
+function openAdSheet(id) { adSheet.id = id; adSheet.f = "all"; leadFromAd = false; adSheetShown = true; shownLeadKey = null; peopleSheetShown = false; leadFromPeople = false; showSheet(adSheetHTML()); }
 /* A refresh empties the lead list for a moment, so an ad sheet that is open fills itself in again once the new data lands. */
 let adSheetShown = false;
 function refreshAdSheet() {   // (also redraws an open lead card, so its survey answers appear when they land)
   const sh = $("#leadSheet");
   if (!sh || !sh.classList.contains("on")) return;
   if (shownLeadKey) { const p = leadByKey(shownLeadKey); if (p) $("#sheetBody").innerHTML = leadSheetHTML(p); return; }
+  if (peopleSheetShown) { $("#sheetBody").innerHTML = peopleSheetHTML(); return; }
   if (!adSheetShown || !$("#adChips")) return;
   $("#sheetBody").innerHTML = adSheetHTML();
 }
