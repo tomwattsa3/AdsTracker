@@ -1083,13 +1083,18 @@ td.cell-pos,td.cell-neg{font-weight:500}
 #mDark[aria-checked="true"] .m-switch i{transform:translateX(20px)}
 /* Lead details sheet */
 .sheet-scrim{position:fixed;inset:0;background:rgba(17,24,39,.45);opacity:0;pointer-events:none;
-  transition:opacity .26s ease;z-index:60}
+  transition:opacity .4s ease;z-index:60}
 .sheet-scrim.on{opacity:1;pointer-events:auto}
 .lead-sheet{position:fixed;left:0;right:0;bottom:0;z-index:70;max-width:640px;margin:0 auto;max-height:88vh;overflow:auto;
   background:var(--surface);border-radius:28px 28px 0 0;box-shadow:0 -12px 40px rgba(16,24,40,.2);
   padding:10px 20px calc(26px + env(safe-area-inset-bottom));transform:translateY(105%);
-  transition:transform .32s cubic-bezier(.16,1,.3,1);overscroll-behavior:contain}
+  transition:transform .46s cubic-bezier(.22,1,.36,1);overscroll-behavior:contain}
 .lead-sheet.on{transform:translateY(0)}
+#sheetBody.rise{animation:sheetRise .42s cubic-bezier(.22,1,.36,1)}
+#sheetBody.settle{animation:sheetSettle .36s cubic-bezier(.22,1,.36,1)}
+@keyframes sheetRise{from{opacity:0;transform:translateY(34px)}to{opacity:1;transform:none}}
+@keyframes sheetSettle{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:none}}
+.sh-row a{color:var(--accent);text-decoration:none}
 .lead-sheet.dragging{transition:none}
 .sheet-grab{width:40px;height:5px;border-radius:999px;background:var(--axis);margin:0 auto 14px;padding:10px 40px;background-clip:content-box;box-sizing:content-box}
 .sh-head{display:flex;align-items:center;gap:14px;margin-bottom:14px}
@@ -2525,6 +2530,13 @@ function pushPerson(kind, key, rec) {
     isn't on the Leads tab. Plain numeric IDs are ignored; a source seen on one of a person's rows
     (e.g. their intro call) is reused for their other rows (their demo call). */
 const callSourceByEmail = new Map();
+const callInfoByEmail = new Map();   // email -> { name, intro: { booked, src, closer }, demo: { … } }
+function noteCall(kind, email, name, booked, src, closer) {
+  const e = callInfoByEmail.get(email) || { name: "" };
+  if (name && !e.name) e.name = name;
+  e[kind] = { booked, src, closer };
+  callInfoByEmail.set(email, e);
+}
 function callRowSource(r, head, email) {
   const col = (names) => head.findIndex((h) => names.includes(h));
   const vals = [col(["campaignname", "campaign"]), col(["adset", "adsetname"]), col(["adname", "ad"])]
@@ -2563,6 +2575,7 @@ function parseCalls(text) {
     const bookedOn = iDate >= 0 ? String(r[iDate] ?? "").trim() : "";
     const L = leadIndex && leadIndex.get(email);
     const rowSrc = callRowSource(r, head, email);
+    noteCall("demo", email, iName >= 0 ? String(r[iName] ?? "").trim() : "", bookedOn, rowSrc, iCloser >= 0 ? String(r[iCloser] ?? "").trim() : "");
     if (!L) {
       // No lead at all — still a real booked call. Filed under the source the row (or the person's intro
       // row) names, e.g. Website; otherwise nothing to attribute it to. Counted, not dropped.
@@ -2620,7 +2633,8 @@ function parseIntroCalls(text) {
 
   const iName = head.findIndex((h) => h === "name");
   const agg = new Map();
-  callSourceByEmail.clear();
+  callSourceByEmail.clear(); callInfoByEmail.clear();
+  const iCloserI = at("closer");
   let matched = 0, unmatched = 0, noEmail = 0;
   grid.slice(1).forEach((r) => {
     const email = String(r[iEmail] ?? "").trim().toLowerCase();
@@ -2628,6 +2642,7 @@ function parseIntroCalls(text) {
     const bookedOn = iDate >= 0 ? String(r[iDate] ?? "").trim() : "";
     const L = leadIndex && leadIndex.get(email);
     const rowSrc = callRowSource(r, head, email);
+    noteCall("intro", email, iName >= 0 ? String(r[iName] ?? "").trim() : "", bookedOn, rowSrc, iCloserI >= 0 ? String(r[iCloserI] ?? "").trim() : "");
     if (!L) {
       // No lead at all — still a real intro call. If the row says where it came from (Website, ig …) it is
       // filed under that source; otherwise it has nothing to attribute it to. Counted, not dropped.
@@ -2845,7 +2860,7 @@ function parseSurvey(text) {
   const at = (k) => head.findIndex((h) => SURVEY_META[k].includes(h));
   const iEmail = at("email");
   if (iEmail < 0) throw new Error("No Email column in the survey sheet.");
-  const iName = at("name"), iDate = at("date");
+  const iName = at("name"), iDate = at("date"), iPhone = at("phone");
   const iPurchDate = at("purchaseDate"), iAmount = at("amount"), iPurchFlag = at("purchasedFlag");
 
   const qCols = [];
@@ -2869,7 +2884,7 @@ function parseSurvey(text) {
 
     rows.push({
       name: (person && person.name) || g(r, iName),
-      email,
+      email, phone: g(r, iPhone),
       date: (person && person.date) || tidyDate(g(r, iDate)),
       introCalled: person ? person.introCalled : false,
       introCallDate: person ? person.introCallDate : "",
@@ -5006,7 +5021,8 @@ function surveyValueHTML(label, v) {
 }
 function leadSheetHTML(p) {
   const nm = p.name || p.email || "Unknown", av = avTint(nm), st = leadStatus(p);
-  const row = (k, v) => v ? `<div class="sh-row"><span>${k}</span><b>${esc(v)}</b></div>` : "";
+  const row = (k, v, href) => v ? `<div class="sh-row"><span>${k}</span><b>${href ? `<a href="${esc(href)}">${esc(v)}</a>` : esc(v)}</b></div>` : "";
+  const svPhone = (surveyByEmail.get(String(p.email || "").toLowerCase()) || {}).phone || "";
   const step = (label, when, done, side = "") =>
     `<div class="sh-step${done ? " done" : ""}"><div class="sh-dot"><i></i><u></u></div><div class="sh-st"><b>${label}</b><small>${esc(when)}</small></div>${side ? `<span class="sh-side">${esc(side)}</span>` : ""}</div>`;
   const survey = SURVEY_FIELDS.map(([label, test]) => `<div><dt>${label}</dt>${surveyValueHTML(label, surveyAnswerFor(p, test))}</div>`).join("");
@@ -5016,7 +5032,7 @@ function leadSheetHTML(p) {
       <button type="button" class="sh-close" data-sheet-close aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
     </div>
     <div class="sh-card">
-      ${row("Email", p.email)}${row("Campaign", leadCampaign(p) !== "—" ? leadCampaign(p) : "")}
+      ${row("Email", p.email, p.email ? "mailto:" + p.email : "")}${row("Phone", fmtPhone(svPhone), svPhone ? "tel:+" + svPhone.replace(/\D/g, "") : "")}${row("Campaign", leadCampaign(p) !== "—" ? leadCampaign(p) : "")}
       ${row("Ad set", leadAdset(p) !== "—" ? leadAdset(p) : "")}${row("Ad", leadAd(p) !== "—" ? leadAd(p) : "")}
     </div>
     <div class="sh-split">
@@ -5034,12 +5050,17 @@ function openLeadSheet(p, fromAd) {
   if (!p) return;
   leadFromPeople = !!fromAd && peopleSheetShown;
   leadFromAd = !!fromAd && !peopleSheetShown && adSheet.id !== null;
-  adSheetShown = false; shownLeadKey = leadKey(p);
-  showSheet(leadSheetHTML(p));
+  adSheetShown = false; shownLeadKey = leadKey(p); shownContact = null;
+  showSheet(leadSheetHTML(p), "fwd");
 }
-function showSheet(html) {
-  $("#sheetBody").innerHTML = html;
+function showSheet(html, dir) {
+  const body = $("#sheetBody");
+  body.innerHTML = html;
   const sh = $("#leadSheet");
+  // Moving between views inside an open sheet: the new view rises in (or settles back down) instead of snapping
+  if (dir && sh.classList.contains("on") && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    body.classList.remove("rise", "settle"); void body.offsetWidth; body.classList.add(dir === "back" ? "settle" : "rise");
+  }
   sh.style.transform = "";
   sh.scrollTop = 0;
   sh.setAttribute("aria-hidden", "false");
@@ -5051,7 +5072,7 @@ function showRsHint() { const c = document.querySelector(".rs-custom"); if (c) c
 function closeLeadSheet() {
   const sh = $("#leadSheet");
   if (!sh || !sh.classList.contains("on")) return;
-  shownLeadKey = null; peopleSheetShown = false; leadFromPeople = false;
+  shownLeadKey = null; shownContact = null; peopleSheetShown = false; leadFromPeople = false;
   sh.classList.remove("on", "dragging");
   sh.style.transform = "";
   $("#sheetScrim").classList.remove("on");
@@ -5062,11 +5083,13 @@ $("#sheetScrim").addEventListener("click", closeLeadSheet);
 $("#leadSheet").addEventListener("click", (e) => {
   if (e.target.closest("[data-sheet-close]")) { closeLeadSheet(); return; }
   if (e.target.closest("[data-sheet-back]")) {
-    shownLeadKey = null;
-    if (leadFromPeople) { leadFromPeople = false; peopleSheetShown = true; showSheet(peopleSheetHTML()); }
-    else { leadFromAd = false; adSheetShown = true; showSheet(adSheetHTML()); }
+    shownLeadKey = null; shownContact = null;
+    if (leadFromPeople) { leadFromPeople = false; peopleSheetShown = true; showSheet(peopleSheetHTML(), "back"); }
+    else { leadFromAd = false; adSheetShown = true; showSheet(adSheetHTML(), "back"); }
     return;
   }
+  const ct = e.target.closest("[data-contact]");
+  if (ct) { openContactSheet(ct.dataset.contact); return; }
   const rs = e.target.closest("[data-rs]");
   if (rs) { applyRange(rs.dataset.rs); closeLeadSheet(); return; }
   if (e.target.closest("#rsApply")) {
@@ -5216,6 +5239,47 @@ $("#mCampView").addEventListener("keydown", (e) => {
   if (ad && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openAdSheet(ad.dataset.ad); }
 });
 
+/* — Contact sheet: details for someone who isn't on the Leads tab (a call or sale with no opt-in row) — */
+const fmtPhone = (v) => {
+  const d = String(v || "").replace(/\D/g, "");
+  if (d.length === 11 && d[0] === "1") return `+1 (${d.slice(1, 4)}) ${d.slice(4, 7)}-${d.slice(7)}`;
+  if (d.length === 10) return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
+  return d ? "+" + d : "";
+};
+let shownContact = null;
+function contactSheetHTML(email) {
+  const info = callInfoByEmail.get(email) || {}, sv = surveyByEmail.get(email);
+  const nm = info.name || (sv && sv.name) || email, av = avTint(nm);
+  const sale = []; people.closes.forEach((list, k) => { if (k.includes("|")) list.forEach((r) => { if (String(r.email || "").toLowerCase() === email) sale.push(r); }); });
+  const src = (info.intro && info.intro.src) || (info.demo && info.demo.src) || "";
+  const closer = (info.demo && info.demo.closer) || (info.intro && info.intro.closer) || "";
+  const phone = sv && sv.phone ? fmtPhone(sv.phone) : "";
+  const row = (k, v, href) => v ? `<div class="sh-row"><span>${k}</span><b>${href ? `<a href="${esc(href)}">${esc(v)}</a>` : esc(v)}</b></div>` : "";
+  const step = (label, when, done) => `<div class="sh-step${done ? " done" : ""}"><div class="sh-dot"><i></i><u></u></div><div class="sh-st"><b>${label}</b><small>${esc(when)}</small></div></div>`;
+  const when = (c) => (c ? (dayText(c.booked) || "Booked") : "Not yet");
+  const qa = SURVEY_FIELDS.map(([label, test]) => {
+    const a = sv && sv.answers.find((x) => test(x.label) && x.value);
+    return `<div><dt>${label}</dt>${surveyValueHTML(label, a ? a.value : "")}</div>`;
+  }).join("");
+  const back = leadFromPeople ? `<button type="button" class="m-back" data-sheet-back style="margin-bottom:6px"><svg width="18" height="18" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" style="transform:rotate(180deg)"><path d="M4.5 2.5 8 6l-3.5 3.5"/></svg>Back to list</button>` : "";
+  return `${back}<div class="sh-head">
+      <span class="av lg" style="background:${av[0]};color:${av[1]}">${esc(initialsOf(nm))}</span>
+      <div class="sh-who"><b>${esc(nm)}</b><span class="chip" style="background:var(--sunk-2);color:var(--ink-2)">Not on the Leads tab</span></div>
+      <button type="button" class="sh-close" data-sheet-close aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+    <div class="sh-card">${row("Email", email, "mailto:" + email)}${row("Phone", phone, phone ? "tel:+" + String(sv.phone).replace(/\D/g, "") : "")}${row("Source", src)}${row("Closer", closer)}</div>
+    <div class="sh-split"><div><h3 class="sh-h">Progress</h3><div class="sh-steps">
+      ${step("Intro call", when(info.intro), !!info.intro)}${step("Demo call", when(info.demo), !!info.demo)}
+      ${step("Purchase", sale.length ? `${cur(sale.reduce((a, r) => a + (r.amount || 0), 0))}${sale[0].purchased ? " on " + (dayText(sale[0].purchased) || "") : ""}` : "Not yet", !!sale.length)}
+    </div></div>
+    <div class="sh-survey"><h3 class="sh-h">Survey</h3><dl>${qa}</dl></div></div>`;
+}
+function openContactSheet(email) {
+  email = String(email || "").toLowerCase();
+  leadFromPeople = peopleSheetShown; leadFromAd = false; adSheetShown = false; shownLeadKey = null; shownContact = email;
+  showSheet(contactSheetHTML(email), "fwd");
+}
+
 /* — Date sheet: every preset plus a custom From / To, for the phone — */
 function openRangeSheet() {
   const w = windowDates(), ds = state.rows.map((r) => r.date).filter(Boolean).sort();
@@ -5259,7 +5323,8 @@ function peopleSheetHTML() {
     if (kind === "closes" && r.amount) bits.push(cur(r.amount));
     const body = `<div class="as-l1"><b>${esc(nm)}</b><span class="chip" style="background:${st.bg};color:${st.ink}">${st.t}</span></div>
       <div class="as-l2">${esc(bits.join(" · "))}</div><div class="as-l3"><span>${esc(ad && ad !== "—" ? ad : "No ad")}</span></div>`;
-    return p ? `<button type="button" class="as-lead" data-lead="${esc(leadKey(p))}">${body}</button>` : `<div class="as-lead">${body}</div>`;
+    return p ? `<button type="button" class="as-lead" data-lead="${esc(leadKey(p))}">${body}</button>`
+      : r.email ? `<button type="button" class="as-lead" data-contact="${esc(String(r.email).toLowerCase())}">${body}</button>` : `<div class="as-lead">${body}</div>`;
   };
   return `<div class="sh-head"><div class="as-title"><span class="m-eyebrow up">${esc(label)}</span><b>${title} · ${fmt(recs.length)}</b></div>
       <button type="button" class="sh-close" data-sheet-close aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
@@ -5306,6 +5371,7 @@ let adSheetShown = false;
 function refreshAdSheet() {   // (also redraws an open lead card, so its survey answers appear when they land)
   const sh = $("#leadSheet");
   if (!sh || !sh.classList.contains("on")) return;
+  if (shownContact) { $("#sheetBody").innerHTML = contactSheetHTML(shownContact); return; }
   if (shownLeadKey) { const p = leadByKey(shownLeadKey); if (p) $("#sheetBody").innerHTML = leadSheetHTML(p); return; }
   if (peopleSheetShown) { $("#sheetBody").innerHTML = peopleSheetHTML(); return; }
   if (!adSheetShown || !$("#adChips")) return;
